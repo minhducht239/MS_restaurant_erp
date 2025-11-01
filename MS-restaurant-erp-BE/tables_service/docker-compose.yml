@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo:6
+    restart: unless-stopped
+    ports:
+      - "27020:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  tables-service:
+    build: .
+    container_name: tables_service
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+      - DB_NAME=tables_service
+    ports:
+      - "8003:8003"
+
+volumes:
+  mongo_data:

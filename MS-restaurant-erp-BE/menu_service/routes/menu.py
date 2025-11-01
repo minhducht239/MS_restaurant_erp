@@ -1,8 +1,11 @@
 from fastapi import APIRouter, HTTPException, Query
 from schemas import MenuItemCreate, MenuItemUpdate, MenuItemOut
+from bson import ObjectId
 from database import db
 from models import menu_item_helper
 from typing import List, Optional
+from auth import get_current_user
+from fastapi import Depends
 
 router = APIRouter()
 
@@ -20,15 +23,20 @@ async def list_menu_items(
     return [menu_item_helper(item) for item in items]
 
 @router.post("/menu-items", response_model=MenuItemOut)
-async def create_menu_item(item: MenuItemCreate):
+async def create_menu_item(item: MenuItemCreate, user=Depends(get_current_user)):
     new_item = item.dict()
+    # Chuyển price sang float để lưu vào MongoDB
+    new_item["price"] = float(new_item["price"])
     result = await db.menu_items.insert_one(new_item)
     created = await db.menu_items.find_one({"_id": result.inserted_id})
     return menu_item_helper(created)
 
 @router.put("/menu-items/{item_id}", response_model=MenuItemOut)
-async def update_menu_item(item_id: str, item: MenuItemUpdate):
+async def update_menu_item(item_id: str, item: MenuItemUpdate, user=Depends(get_current_user)):
     update_data = {k: v for k, v in item.dict().items() if v is not None}
+    # Nếu có price, chuyển sang float
+    if "price" in update_data:
+        update_data["price"] = float(update_data["price"])
     result = await db.menu_items.update_one({"_id": ObjectId(item_id)}, {"$set": update_data})
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Menu item not found")
@@ -36,7 +44,7 @@ async def update_menu_item(item_id: str, item: MenuItemUpdate):
     return menu_item_helper(updated)
 
 @router.delete("/menu-items/{item_id}")
-async def delete_menu_item(item_id: str):
+async def delete_menu_item(item_id: str, user=Depends(get_current_user)):
     result = await db.menu_items.delete_one({"_id": ObjectId(item_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Menu item not found")

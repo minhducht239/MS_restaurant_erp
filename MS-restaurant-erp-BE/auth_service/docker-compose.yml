@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo:6
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  auth-service:
+    build: .
+    container_name: auth_service
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+      - DB_NAME=auth_service
+      - JWT_SECRET=supersecret
+    ports:
+      - "8001:8000"
+
+volumes:
+  mongo_data:
