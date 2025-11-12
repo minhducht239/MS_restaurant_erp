@@ -1,25 +1,27 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 import requests
 import os
+from auth import token_required  # Thêm dòng này
 
 bp = Blueprint('dashboard', __name__)
 
-# Địa chỉ các service con (sửa lại cho đúng với môi trường của bạn)
 BILLING_URL = os.getenv("BILLING_URL", "http://billing_service:8000")
 CUSTOMER_URL = os.getenv("CUSTOMER_URL", "http://customer_service:8000")
 MENU_URL = os.getenv("MENU_URL", "http://menu_service:8000")
 STAFF_URL = os.getenv("STAFF_URL", "http://staff_service:8000")
 
 @bp.route('/dashboard/statistics', methods=['GET'])
+@token_required
 def dashboard_statistics():
-    # Gọi API từ các service con
-    try:
-        billing_stats = requests.get(f"{BILLING_URL}/bills/statistics").json()
-        customer_count = requests.get(f"{CUSTOMER_URL}/customers/count").json()
-        menu_count = requests.get(f"{MENU_URL}/menu-items/count").json()
-        staff_count = requests.get(f"{STAFF_URL}/staff/count").json()
+    token = request.headers.get("Authorization")
+    headers = {"Authorization": token} if token else {}
 
-        # Tổng hợp dữ liệu
+    try:
+        billing_stats = requests.get(f"{BILLING_URL}/bills/statistics", headers=headers).json()
+        customer_count = requests.get(f"{CUSTOMER_URL}/customers/count", headers=headers).json()
+        menu_count = requests.get(f"{MENU_URL}/menu-items/count", headers=headers).json()
+        staff_count = requests.get(f"{STAFF_URL}/staff/count", headers=headers).json()
+
         result = {
             "totalOrders": billing_stats.get("totalOrders"),
             "totalRevenue": billing_stats.get("totalRevenue"),
@@ -33,5 +35,3 @@ def dashboard_statistics():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-# Có thể bổ sung các route khác như /dashboard/weekly-revenue, /dashboard/top-selling-items ...

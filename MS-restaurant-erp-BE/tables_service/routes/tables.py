@@ -1,18 +1,20 @@
 from flask import Blueprint, request, jsonify
 from database import db
-from models import table_helper
+from models import table_helper, order_helper
 from bson import ObjectId
 from datetime import datetime
-from models import table_helper, order_helper
+from auth import token_required  
 
 bp = Blueprint('tables', __name__, url_prefix='/tables')
 
 @bp.route('/', methods=['GET'])
+@token_required
 def list_tables():
     tables = db.tables.find()
     return jsonify([table_helper(t) for t in tables])
 
 @bp.route('/', methods=['POST'])
+@token_required
 def create_table():
     data = request.json
     data["created_at"] = datetime.utcnow()
@@ -22,6 +24,7 @@ def create_table():
     return jsonify(table_helper(table)), 201
 
 @bp.route('/<string:table_id>', methods=['PUT'])
+@token_required
 def update_table(table_id):
     data = request.json
     data["updated_at"] = datetime.utcnow()
@@ -32,17 +35,21 @@ def update_table(table_id):
     return jsonify(table_helper(table))
 
 @bp.route('/<string:table_id>', methods=['DELETE'])
+@token_required
 def delete_table(table_id):
     result = db.tables.delete_one({"_id": ObjectId(table_id)})
     if result.deleted_count == 0:
         return jsonify({"error": "Table not found"}), 404
     return jsonify({"message": "Table deleted"})
+
 @bp.route('/<string:table_id>/orders', methods=['GET'])
+@token_required
 def list_orders(table_id):
     orders = db.orders.find({"table_id": ObjectId(table_id)})
     return jsonify([order_helper(o) for o in orders])
 
 @bp.route('/<string:table_id>/orders', methods=['POST'])
+@token_required
 def create_order(table_id):
     data = request.json
     order = {
@@ -56,6 +63,7 @@ def create_order(table_id):
     return jsonify(order_helper(order)), 201
 
 @bp.route('/orders/<string:order_id>', methods=['GET'])
+@token_required
 def get_order(order_id):
     order = db.orders.find_one({"_id": ObjectId(order_id)})
     if not order:
@@ -63,6 +71,7 @@ def get_order(order_id):
     return jsonify(order_helper(order))
 
 @bp.route('/orders/<string:order_id>', methods=['PUT'])
+@token_required
 def update_order(order_id):
     data = request.json
     data["updated_at"] = datetime.utcnow()
@@ -73,6 +82,7 @@ def update_order(order_id):
     return jsonify(order_helper(order))
 
 @bp.route('/orders/<string:order_id>', methods=['DELETE'])
+@token_required
 def delete_order(order_id):
     result = db.orders.delete_one({"_id": ObjectId(order_id)})
     if result.deleted_count == 0:

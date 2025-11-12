@@ -4,17 +4,20 @@ from models import customer_helper
 from schemas import CustomerSchema
 from datetime import datetime
 from bson import ObjectId
+from auth import token_required
 
 bp = Blueprint('customers', __name__)
 customer_schema = CustomerSchema()
 customers_schema = CustomerSchema(many=True)
 
 @bp.route('/customers', methods=['GET'])
+@token_required
 def get_customers():
     customers = db.customers.find()
     return customers_schema.dump([customer_helper(c) for c in customers]), 200
 
 @bp.route('/customers', methods=['POST'])
+@token_required
 def create_customer():
     data = request.json
     errors = customer_schema.validate(data)
@@ -26,6 +29,7 @@ def create_customer():
     return customer_schema.dump(customer_helper(customer)), 201
 
 @bp.route('/customers/<string:customer_id>', methods=['GET'])
+@token_required
 def get_customer(customer_id):
     customer = db.customers.find_one({"_id": ObjectId(customer_id)})
     if not customer:
@@ -33,6 +37,7 @@ def get_customer(customer_id):
     return customer_schema.dump(customer_helper(customer)), 200
 
 @bp.route('/customers/<string:customer_id>', methods=['PUT'])
+@token_required
 def update_customer(customer_id):
     data = request.json
     db.customers.update_one({"_id": ObjectId(customer_id)}, {"$set": data})
@@ -42,6 +47,7 @@ def update_customer(customer_id):
     return customer_schema.dump(customer_helper(customer)), 200
 
 @bp.route('/customers/<string:customer_id>', methods=['DELETE'])
+@token_required
 def delete_customer(customer_id):
     result = db.customers.delete_one({"_id": ObjectId(customer_id)})
     if result.deleted_count == 0:
