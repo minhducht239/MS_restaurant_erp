@@ -1,5 +1,7 @@
 import axios from "axios";
-const API_URL = "http://localhost:8000/api";
+import { API_BASE_URL } from "./config";
+
+const API_URL = API_BASE_URL.dashboard;
 
 // Hàm lấy header xác thực
 const getAuthHeader = () => {
@@ -10,12 +12,12 @@ const getAuthHeader = () => {
 // Thêm hàm theo dõi request/response để debug
 const logApiCall = async (name, promise) => {
   try {
-    console.log(`🔍 Calling API: ${name}...`);
+    console.log(`Calling API: ${name}...`);
     const result = await promise;
-    console.log(`✅ API ${name} success:`, result);
+    console.log(`API ${name} success:`, result);
     return result;
   } catch (error) {
-    console.error(`❌ API ${name} failed:`, error);
+    console.error(`API ${name} failed:`, error);
     throw error;
   }
 };
@@ -56,7 +58,6 @@ export const getWeeklyRevenue = async () => {
 // Thêm hàm doanh thu theo tháng
 export const getMonthlyRevenue = async () => {
   try {
-    // Sửa từ /bills/monthly_revenue thành /dashboard/monthly-revenue/
     const response = await axios.get(`${API_URL}/dashboard/monthly-revenue/`, {
       headers: getAuthHeader(),
     });

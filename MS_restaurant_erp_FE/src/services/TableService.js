@@ -1,6 +1,8 @@
 import axios from "axios";
 import { API_BASE_URL } from "./config";
 
+const API_URL = API_BASE_URL.tables;
+
 // Hàm lấy header xác thực
 const getAuthHeader = () => {
   const token = localStorage.getItem("access_token");
@@ -12,7 +14,7 @@ export const getTables = async (filters = {}) => {
   try {
     console.log("Getting tables with filters:", filters);
     const { floor, status } = filters;
-    let url = `${API_BASE_URL}/api/tables/`;
+    let url = `${API_URL}/tables/`;
 
     // Thêm query params nếu có
     const params = new URLSearchParams();
@@ -53,7 +55,7 @@ export const getTableDetails = async (tableId) => {
   if (!tableId) throw new Error("Table ID is required");
 
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/tables/${tableId}/`, {
+    const response = await axios.get(`${API_URL}/tables/${tableId}/`, {
       headers: getAuthHeader(),
     });
     return response.data;
@@ -71,7 +73,7 @@ export const getTableOrders = async (tableId) => {
   if (!tableId) throw new Error("Table ID is required");
 
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/tables/${tableId}/orders/`, {
+    const response = await axios.get(`${API_URL}/tables/${tableId}/orders/`, {
       headers: getAuthHeader(),
     });
     return response.data;
@@ -84,20 +86,20 @@ export const getTableOrders = async (tableId) => {
 // Cập nhật trạng thái bàn
 export const updateTableStatus = async (tableId, status) => {
   if (!tableId) {
-    console.error("❌ updateTableStatus: Table ID is required");
+    console.error("updateTableStatus: Table ID is required");
     throw new Error("Table ID is required");
   }
 
   if (!status) {
-    console.error("❌ updateTableStatus: Status is required");
+    console.error("updateTableStatus: Status is required");
     throw new Error("Status is required");
   }
 
   try {
-    console.log(`🔄 API: Updating table ${tableId} status to: ${status}`);
+    console.log(`API: Updating table ${tableId} status to: ${status}`);
 
     const response = await axios.patch(
-      `${API_BASE_URL}/api/tables/${tableId}/`,
+      `${API_URL}/tables/${tableId}/`,
       { status },
       {
         headers: {
@@ -107,10 +109,10 @@ export const updateTableStatus = async (tableId, status) => {
       }
     );
 
-    console.log("✅ API: Table status updated successfully:", response.data);
+    console.log("API: Table status updated successfully:", response.data);
     return response.data;
   } catch (error) {
-    console.error(`❌ API: Error updating table ${tableId} status:`, error);
+    console.error(`API: Error updating table ${tableId} status:`, error);
     throw error;
   }
 };
@@ -121,10 +123,10 @@ export const addOrderToTable = async (tableId, items) => {
   if (!items || !items.length) throw new Error("Items are required");
 
   try {
-    console.log(`🍽️ Adding items to table ${tableId}:`, items);
+    console.log(`Adding items to table ${tableId}:`, items);
 
     const response = await axios.post(
-      `${API_BASE_URL}/api/tables/${tableId}/add_order/`,
+      `${API_URL}/tables/${tableId}/add_order/`,
       { items }, // Gửi items đã được merge
       {
         headers: {
@@ -134,22 +136,22 @@ export const addOrderToTable = async (tableId, items) => {
       }
     );
 
-    console.log("✅ Items added successfully:", response.data);
+    console.log("Items added successfully:", response.data);
     return response.data;
   } catch (error) {
-    console.error(`❌ Error adding orders to table ${tableId}:`, error);
+    console.error(`Error adding orders to table ${tableId}:`, error);
     throw error;
   }
 };
 
 // Tạo hóa đơn từ bàn
 export const createBillFromTable = async (tableId, billData = {}) => {
-  console.log("🧾 API: Creating bill from table");
+  console.log("API: Creating bill from table");
   console.log("- tableId:", tableId, typeof tableId);
   console.log("- billData:", billData);
 
   if (!tableId) {
-    console.error("❌ API: Table ID is required");
+    console.error("API: Table ID is required");
     throw new Error("Table ID is required");
   }
 
@@ -158,12 +160,12 @@ export const createBillFromTable = async (tableId, billData = {}) => {
       date: billData.date || new Date().toISOString().split("T")[0],
     };
 
-    console.log("📤 Sending bill creation request:");
-    console.log("- URL:", `${API_BASE_URL}/api/tables/${tableId}/create_bill/`);
+    console.log("Sending bill creation request:");
+    console.log("- URL:", `${API_URL}/tables/${tableId}/create_bill/`);
     console.log("- Data:", requestData);
 
     const response = await axios.post(
-      `${API_BASE_URL}/api/tables/${tableId}/create_bill/`,
+      `${API_URL}/tables/${tableId}/create_bill/`,
       requestData,
       {
         headers: {
@@ -173,15 +175,15 @@ export const createBillFromTable = async (tableId, billData = {}) => {
       }
     );
 
-    console.log("✅ Raw axios response:", response);
-    console.log("✅ Response status:", response.status);
-    console.log("✅ Response data:", response.data);
-    console.log("✅ Response data type:", typeof response.data);
-    console.log("✅ Response data keys:", response.data ? Object.keys(response.data) : "null");
+    console.log("Raw axios response:", response);
+    console.log("Response status:", response.status);
+    console.log("Response data:", response.data);
+    console.log("Response data type:", typeof response.data);
+    console.log("Response data keys:", response.data ? Object.keys(response.data) : "null");
 
     return response.data;
   } catch (error) {
-    console.error("❌ Error creating bill:", error);
+    console.error("Error creating bill:", error);
 
     if (error.response) {
       console.error("- Status:", error.response.status);
@@ -211,7 +213,7 @@ export const createTable = async (tableData) => {
   if (!tableData || !tableData.name) throw new Error("Table name is required");
 
   try {
-    const response = await axios.post(`${API_BASE_URL}/api/tables/`, tableData, {
+    const response = await axios.post(`${API_URL}/tables/`, tableData, {
       headers: {
         ...getAuthHeader(),
         "Content-Type": "application/json",
@@ -235,7 +237,7 @@ export const deleteTable = async (tableId) => {
   if (!tableId) throw new Error("Table ID is required");
 
   try {
-    const response = await axios.delete(`${API_BASE_URL}/api/tables/${tableId}/`, {
+    const response = await axios.delete(`${API_URL}/tables/${tableId}/`, {
       headers: getAuthHeader(),
     });
     return response.data;

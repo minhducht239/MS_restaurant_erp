@@ -3,3 +3,5 @@ flask-restful
 flask-cors
 pymongo
 python-dotenv
+marshmallow
+python-jose[cryptography]

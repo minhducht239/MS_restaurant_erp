@@ -1,6 +1,7 @@
 import axios from "axios";
+import { API_BASE_URL } from "./config";
 
-const API_URL = "http://localhost:8000/api";
+const API_URL = API_BASE_URL.menu;
 
 axios.defaults.timeout = 10000; // 10 seconds timeout
 
@@ -72,7 +73,7 @@ export const getMenuItem = async (id) => {
 
 export const createMenuItem = async (itemData) => {
   try {
-    console.log("=== CREATE MENU ITEM START ===");
+    console.log("CREATE MENU ITEM START");
     console.log("Input data type:", typeof itemData);
     console.log("Is FormData:", itemData instanceof FormData);
 
@@ -102,17 +103,17 @@ export const createMenuItem = async (itemData) => {
     });
 
     console.log("Create response:", response.data);
-    console.log("=== CREATE MENU ITEM SUCCESS ===");
+    console.log("CREATE MENU ITEM SUCCESS");
     return response.data;
   } catch (error) {
-    console.error("=== CREATE MENU ITEM ERROR ===");
+    console.error("CREATE MENU ITEM ERROR");
     handleApiError(error, "createMenuItem");
   }
 };
 
 export const updateMenuItem = async (id, itemData) => {
   try {
-    console.log(`=== UPDATE MENU ITEM ${id} START ===`);
+    console.log(`UPDATE MENU ITEM ${id} START`);
     console.log("Input data type:", typeof itemData);
     console.log("Is FormData:", itemData instanceof FormData);
 
@@ -142,10 +143,10 @@ export const updateMenuItem = async (id, itemData) => {
     });
 
     console.log("Update response:", response.data);
-    console.log(`=== UPDATE MENU ITEM ${id} SUCCESS ===`);
+    console.log(`UPDATE MENU ITEM ${id} SUCCESS`);
     return response.data;
   } catch (error) {
-    console.error(`=== UPDATE MENU ITEM ${id} ERROR ===`);
+    console.error(`UPDATE MENU ITEM ${id} ERROR`);
     handleApiError(error, `updateMenuItem(${id})`);
   }
 };

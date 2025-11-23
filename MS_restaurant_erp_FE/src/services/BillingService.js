@@ -1,6 +1,9 @@
 import axios from "axios";
 import { API_BASE_URL } from "./config";
 
+// Thay thế
+const API_URL = API_BASE_URL.billing;
+
 // Hàm lấy header xác thực
 const getAuthHeader = () => {
   const token = localStorage.getItem("access_token");
@@ -10,7 +13,7 @@ const getAuthHeader = () => {
 // Lấy danh sách hóa đơn
 export const getBills = async (params = {}) => {
   try {
-    let url = `${API_BASE_URL}/api/bills/`; // Sửa từ API_URL thành API_BASE_URL
+    let url = `${API_URL}/bills/`;
 
     // Log chi tiết các tham số ngày
     if (params.from_date || params.to_date) {
@@ -49,7 +52,7 @@ export const getBills = async (params = {}) => {
 // Lấy chi tiết hóa đơn
 export const getBillDetail = async (id) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/bills/${id}/`, {
+    const response = await axios.get(`${API_URL}/bills/${id}/`, {
       headers: getAuthHeader(),
     });
 
@@ -74,7 +77,7 @@ export const createBill = async (billData) => {
 
       // Bước 1: Tạo bill từ table trước
       const tableBillResponse = await axios.post(
-        `${API_BASE_URL}/api/tables/${billData.table_id}/create_bill/`,
+        `${API_BASE_URL.tables}/tables/${billData.table_id}/create_bill/`,
         {
           date: billData.date || new Date().toISOString().split("T")[0],
         },
@@ -94,7 +97,7 @@ export const createBill = async (billData) => {
 
         try {
           const updateResponse = await axios.patch(
-            `${API_BASE_URL}/api/bills/${tableBillResponse.data.bill_id}/`,
+            `${API_URL}/bills/${tableBillResponse.data.bill_id}/`,
             {
               customer: billData.customer?.trim() || "",
               phone: billData.phone?.trim() || "",
@@ -132,7 +135,7 @@ export const createBill = async (billData) => {
       // Tạo hóa đơn thường
       console.log("Creating regular bill");
 
-      const response = await axios.post(`${API_BASE_URL}/api/bills/`, billData, {
+      const response = await axios.post(`${API_URL}/bills/`, billData, {
         headers: {
           ...getAuthHeader(),
           "Content-Type": "application/json",
@@ -162,7 +165,7 @@ export const createBill = async (billData) => {
 // Xóa hóa đơn
 export const deleteBill = async (id) => {
   try {
-    await axios.delete(`${API_BASE_URL}/api/bills/${id}/`, {
+    await axios.delete(`${API_URL}/bills/${id}/`, {
       headers: getAuthHeader(),
     });
   } catch (error) {
@@ -174,7 +177,7 @@ export const deleteBill = async (id) => {
 // Lấy dữ liệu doanh thu theo tháng
 export const getMonthlyRevenue = async (year = new Date().getFullYear()) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/bills/monthly_revenue/?year=${year}`, {
+    const response = await axios.get(`${API_URL}/bills/monthly_revenue/?year=${year}`, {
       headers: getAuthHeader(),
     });
     return response.data;

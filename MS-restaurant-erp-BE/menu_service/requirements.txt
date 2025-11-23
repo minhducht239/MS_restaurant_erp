@@ -3,4 +3,5 @@ uvicorn
 motor
 pydantic
 python-dotenv
-python-jose
+python-jose[cryptography]
+python-multipart
