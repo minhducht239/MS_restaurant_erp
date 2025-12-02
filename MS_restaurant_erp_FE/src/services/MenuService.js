@@ -3,9 +3,8 @@ import { API_BASE_URL } from "./config";
 
 const API_URL = API_BASE_URL.menu;
 
-axios.defaults.timeout = 10000; // 10 seconds timeout
+axios.defaults.timeout = 10000;
 
-// Get Auth token
 const getAuthHeader = () => {
   const token = localStorage.getItem("access_token");
   return { Authorization: `Bearer ${token}` };
@@ -15,7 +14,6 @@ const handleApiError = (error, operation = "API operation") => {
   console.error(`Error in ${operation}:`, error);
 
   if (error.response) {
-    // Server responded with error status
     const { status, data } = error.response;
     console.error(`HTTP ${status}:`, data);
 
@@ -34,10 +32,8 @@ const handleApiError = (error, operation = "API operation") => {
         throw new Error(`Lỗi server (${status}): ${data?.detail || "Không xác định"}`);
     }
   } else if (error.request) {
-    // Network error
     throw new Error("Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
   } else {
-    // Other error
     throw new Error(error.message || "Đã xảy ra lỗi không xác định.");
   }
 };
@@ -80,7 +76,7 @@ export const createMenuItem = async (itemData) => {
     let headers = { ...getAuthHeader() };
 
     if (itemData instanceof FormData) {
-      console.log("Using FormData for file upload - letting browser set Content-Type");
+      console.log("Using FormData for file upload");
 
       console.log("FormData contents:");
       for (let [key, value] of itemData.entries()) {
@@ -95,8 +91,6 @@ export const createMenuItem = async (itemData) => {
       headers["Content-Type"] = "application/json";
       console.log("JSON data:", itemData);
     }
-
-    console.log("Request headers:", headers);
 
     const response = await axios.post(`${API_URL}/menu-items/`, itemData, {
       headers,
@@ -120,7 +114,7 @@ export const updateMenuItem = async (id, itemData) => {
     let headers = { ...getAuthHeader() };
 
     if (itemData instanceof FormData) {
-      console.log("Using FormData for file upload - letting browser set Content-Type");
+      console.log("Using FormData for file upload");
 
       console.log("FormData contents:");
       for (let [key, value] of itemData.entries()) {
@@ -135,8 +129,6 @@ export const updateMenuItem = async (id, itemData) => {
       headers["Content-Type"] = "application/json";
       console.log("JSON data:", itemData);
     }
-
-    console.log("Request headers:", headers);
 
     const response = await axios.put(`${API_URL}/menu-items/${id}/`, itemData, {
       headers,
@@ -191,14 +183,13 @@ export const toggleMenuItemAvailability = async (id, isAvailable) => {
 
     const response = await axios.patch(
       `${API_URL}/menu-items/${id}/`,
-      {
-        is_available: Boolean(isAvailable),
-      },
+      { is_available: Boolean(isAvailable) },
       {
         headers: {
           ...getAuthHeader(),
           "Content-Type": "application/json",
         },
+        params: { is_available: Boolean(isAvailable) }
       }
     );
 
