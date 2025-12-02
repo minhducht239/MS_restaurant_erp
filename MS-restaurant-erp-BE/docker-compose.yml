@@ -1,6 +1,7 @@
 version: '3.8'
+
 services:
-  # MongoDB cho Auth Service
+  # MongoDB cho Auth Service và User Service (dùng chung)
   mongo-auth:
     image: mongo:6
     restart: unless-stopped
@@ -9,6 +10,8 @@ services:
       - "27018:27017"
     volumes:
       - mongo_auth_data:/data/db
+    networks:
+      - app-network
 
   # MongoDB cho Billing Service
   mongo-billing:
@@ -19,6 +22,8 @@ services:
       - "27019:27017"
     volumes:
       - mongo_billing_data:/data/db
+    networks:
+      - app-network
 
   # MongoDB cho Customer Service
   mongo-customer:
@@ -29,6 +34,8 @@ services:
       - "27020:27017"
     volumes:
       - mongo_customer_data:/data/db
+    networks:
+      - app-network
 
   # MongoDB cho Menu Service
   mongo-menu:
@@ -39,6 +46,8 @@ services:
       - "27021:27017"
     volumes:
       - mongo_menu_data:/data/db
+    networks:
+      - app-network
 
   # MongoDB cho Staff Service
   mongo-staff:
@@ -49,6 +58,8 @@ services:
       - "27022:27017"
     volumes:
       - mongo_staff_data:/data/db
+    networks:
+      - app-network
 
   # MongoDB cho Tables Service
   mongo-tables:
@@ -59,49 +70,88 @@ services:
       - "27023:27017"
     volumes:
       - mongo_tables_data:/data/db
+    networks:
+      - app-network
 
+  # Auth Service - Xác thực và JWT
   auth-service:
     build: ./auth_service
     container_name: auth_service
+    restart: unless-stopped
     ports:
       - "8001:8000"
     environment:
       - MONGO_URL=mongodb://mongo-auth:27017
+      - DB_NAME=auth_service
       - JWT_SECRET=supersecret
     depends_on:
       - mongo-auth
+    networks:
+      - app-network
 
+  # User Service - Quản lý thông tin user
+  user-service:
+    build: ./user_service
+    container_name: user_service
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      - MONGO_URL=mongodb://mongo-auth:27017
+      - DB_NAME=auth_service
+      - JWT_SECRET=supersecret
+    volumes:
+      - ./user_service/uploads:/app/uploads
+    depends_on:
+      - mongo-auth
+    networks:
+      - app-network
+
+  # Billing Service
   billing-service:
     build: ./billing_service
     container_name: billing_service
-    ports:
-      - "8002:8000"
-    environment:
-      - MONGO_URL=mongodb://mongo-billing:27017
-    depends_on:
-      - mongo-billing
-
-  customer-service:
-    build: ./customer_service
-    container_name: customer_service
+    restart: unless-stopped
     ports:
       - "8003:8000"
     environment:
-      - MONGO_URL=mongodb://mongo-customer:27017
+      - MONGO_URL=mongodb://mongo-billing:27017
+      - JWT_SECRET=supersecret
     depends_on:
-      - mongo-customer
+      - mongo-billing
+    networks:
+      - app-network
 
-  dashboard-service:
-    build: ./dashboard_service
-    container_name: dashboard_service
+  # Customer Service
+  customer-service:
+    build: ./customer_service
+    container_name: customer_service
+    restart: unless-stopped
     ports:
       - "8004:8000"
     environment:
-      - BILLING_URL=http://billing_service:8000
-      - CUSTOMER_URL=http://customer_service:8000
+      - MONGO_URL=mongodb://mongo-customer:27017
+      - JWT_SECRET=supersecret
+    depends_on:
+      - mongo-customer
+    networks:
+      - app-network
+
+  # Dashboard Service
+  dashboard-service:
+    build: ./dashboard_service
+    container_name: dashboard_service
+    restart: unless-stopped
+    ports:
+      - "8005:8000"
+    environment:
+      - BILLING_URL=http://billing-service:8000
+      - CUSTOMER_URL=http://customer-service:8000
       - MENU_URL=http://menu-service:8000
       - STAFF_URL=http://staff-service:8000
       - TABLE_URL=http://tables-service:8000
+      - AUTH_URL=http://auth-service:8000
+      - USER_URL=http://user-service:8002
       - JWT_SECRET=supersecret
     depends_on:
       - billing-service
@@ -109,39 +159,55 @@ services:
       - menu-service
       - staff-service
       - tables-service
+      - auth-service
+      - user-service
+    networks:
+      - app-network
 
+  # Menu Service
   menu-service:
     build: ./menu_service
     container_name: menu-service
+    restart: unless-stopped
     ports:
-      - "8005:8000"
+      - "8006:8000"
     environment:
       - MONGO_URL=mongodb://mongo-menu:27017
       - JWT_SECRET=supersecret
     depends_on:
       - mongo-menu
+    networks:
+      - app-network
 
+  # Staff Service
   staff-service:
     build: ./staff_service
     container_name: staff-service
+    restart: unless-stopped
     ports:
-      - "8006:8000"
+      - "8007:8000"
     environment:
       - MONGO_URL=mongodb://mongo-staff:27017
       - JWT_SECRET=supersecret
     depends_on:
       - mongo-staff
+    networks:
+      - app-network
 
+  # Tables Service
   tables-service:
     build: ./tables_service
     container_name: tables-service
+    restart: unless-stopped
     ports:
-      - "8007:8000"
+      - "8008:8000"
     environment:
       - MONGO_URL=mongodb://mongo-tables:27017
       - JWT_SECRET=supersecret
     depends_on:
       - mongo-tables
+    networks:
+      - app-network
 
 volumes:
   mongo_auth_data:
@@ -150,3 +216,7 @@ volumes:
   mongo_menu_data:
   mongo_staff_data:
   mongo_tables_data:
+
+networks:
+  app-network:
+    driver: bridge

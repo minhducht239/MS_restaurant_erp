@@ -1,19 +1,20 @@
 from pydantic import BaseModel, EmailStr, constr
-from typing import Optional
 
 class UserCreate(BaseModel):
     username: str
     email: EmailStr
     password: constr(min_length=6, max_length=72)
+    first_name: str = None
+    last_name: str = None
+    phone: str = None
+    date_of_birth: str = None
+    address: str = None
 
 class UserLogin(BaseModel):
     username: str
     password: constr(min_length=6, max_length=72)
 
-class UserOut(BaseModel):
-    id: Optional[str]
-    username: str
-    email: EmailStr
-    role: Optional[str] = None
-    avatar: Optional[str] = None
-    phone: Optional[str] = None
+class TokenResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str

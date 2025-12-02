@@ -1,16 +1,29 @@
 import axios from "axios";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8001";
+// Tách riêng 2 API URLs
+const AUTH_API_URL = process.env.REACT_APP_AUTH_API_URL || "http://localhost:8001";
+const USER_API_URL = process.env.REACT_APP_USER_API_URL || "http://localhost:8002";
 
-const apiClient = axios.create({
-  baseURL: API_URL,
+// Auth API Client (cho authentication)
+const authClient = axios.create({
+  baseURL: AUTH_API_URL,
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-apiClient.interceptors.request.use(
+// User API Client (cho user profile)
+const userClient = axios.create({
+  baseURL: USER_API_URL,
+  timeout: 15000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// Add token to user requests
+userClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("access_token");
     if (token) {
@@ -21,7 +34,8 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-apiClient.interceptors.response.use(
+// Handle token refresh for user client
+userClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
@@ -33,7 +47,8 @@ apiClient.interceptors.response.use(
         const refreshToken = localStorage.getItem("refresh_token");
         if (!refreshToken) throw new Error("No refresh token");
 
-        const response = await axios.post(`${API_URL}/auth/token/refresh/`, {
+        // Gọi AUTH SERVICE để refresh token
+        const response = await authClient.post("/auth/token/refresh", {
           refresh: refreshToken,
         });
 
@@ -42,7 +57,7 @@ apiClient.interceptors.response.use(
 
         // Retry original request
         originalRequest.headers.Authorization = `Bearer ${access}`;
-        return apiClient(originalRequest);
+        return userClient(originalRequest);
       } catch (refreshError) {
         // Refresh failed, redirect to login
         localStorage.removeItem("access_token");
@@ -55,11 +70,6 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-const getAuthHeader = () => {
-  const token = localStorage.getItem("access_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
 
 const handleApiError = (error, context = "") => {
   console.error(`API Error in ${context}:`, error);
@@ -90,11 +100,12 @@ const handleApiError = (error, context = "") => {
   }
 };
 
+// ============= USER SERVICE APIs =============
+
 export const getCurrentUser = async () => {
   try {
     console.log("=== GET CURRENT USER ===");
-
-    const response = await apiClient.get("/auth/me/");
+    const response = await userClient.get("/users/me");
     console.log("Current user response:", response.data);
     return response.data;
   } catch (error) {
@@ -127,7 +138,7 @@ export const updateUserProfile = async (profileData) => {
 
     // Xử lý phone
     if (profileData.phone && profileData.phone.trim()) {
-      dataToSend.phone_number = profileData.phone.trim();
+      dataToSend.phone = profileData.phone.trim();
     }
 
     if (profileData.address !== undefined) {
@@ -144,7 +155,8 @@ export const updateUserProfile = async (profileData) => {
       throw new Error("No data to update");
     }
 
-    const response = await apiClient.patch("/auth/user/", dataToSend);
+    // Gọi USER SERVICE
+    const response = await userClient.patch("/users/me", dataToSend);
 
     console.log("Update response:", response.data);
     return response.data;
@@ -152,6 +164,63 @@ export const updateUserProfile = async (profileData) => {
     handleApiError(error, "updateUserProfile");
   }
 };
+
+export const uploadAvatar = async (file) => {
+  try {
+    console.log("=== UPLOAD AVATAR ===");
+
+    if (!file) {
+      throw new Error("No file provided");
+    }
+
+    let formData;
+    if (file instanceof FormData) {
+      formData = file;
+    } else {
+      formData = new FormData();
+      formData.append("file", file); // Backend mới dùng "file" thay vì "avatar"
+    }
+
+    // Gọi USER SERVICE
+    const response = await userClient.post("/users/upload-avatar", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    console.log("Avatar upload response:", response.data);
+    return response.data;
+  } catch (error) {
+    handleApiError(error, "uploadAvatar");
+  }
+};
+
+export const deleteAvatar = async () => {
+  try {
+    console.log("=== DELETE AVATAR ===");
+    // Gọi USER SERVICE
+    const response = await userClient.delete("/users/avatar");
+    console.log("Delete avatar response:", response.data);
+    return response.data;
+  } catch (error) {
+    handleApiError(error, "deleteAvatar");
+  }
+};
+
+export const getAvatarUrl = (avatarPath) => {
+  if (!avatarPath) return null;
+
+  // If already full URL, return as is
+  if (avatarPath.startsWith("http")) {
+    return avatarPath;
+  }
+
+  // If relative path, prepend USER API base URL
+  const baseUrl = USER_API_URL.replace("/api", "");
+  return `${baseUrl}${avatarPath}`;
+};
+
+// ============= AUTH SERVICE APIs =============
 
 export const changeUserPassword = async (passwordData) => {
   try {
@@ -174,14 +243,19 @@ export const changeUserPassword = async (passwordData) => {
       throw new Error("New password must be at least 6 characters");
     }
 
+    // Get current user để lấy username
+    const currentUser = await getCurrentUser();
+
     const dataToSend = {
       current_password: passwordData.currentPassword,
       new_password: passwordData.newPassword,
+      username: currentUser.username,
     };
 
     console.log("Sending password change request...");
 
-    const response = await apiClient.put("/auth/change-password/", dataToSend);
+    // Gọi AUTH SERVICE
+    const response = await authClient.put("/auth/change-password", dataToSend);
 
     console.log("Password change response:", response.data);
     return response.data;
@@ -190,46 +264,4 @@ export const changeUserPassword = async (passwordData) => {
   }
 };
 
-export const uploadAvatar = async (file) => {
-  try {
-    console.log("=== UPLOAD AVATAR ===");
-
-    if (!file) {
-      throw new Error("No file provided");
-    }
-
-    let formData;
-    if (file instanceof FormData) {
-      formData = file;
-    } else {
-      formData = new FormData();
-      formData.append("avatar", file);
-    }
-
-    const response = await apiClient.post("/auth/upload-avatar/", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-
-    console.log("Avatar upload response:", response.data);
-    return response.data;
-  } catch (error) {
-    handleApiError(error, "uploadAvatar");
-  }
-};
-
-export const getAvatarUrl = (avatarPath) => {
-  if (!avatarPath) return null;
-
-  // If already full URL, return as is
-  if (avatarPath.startsWith("http")) {
-    return avatarPath;
-  }
-
-  // If relative path, prepend API base URL
-  const baseUrl = API_URL.replace("/api", ""); // Remove /api from base URL
-  return `${baseUrl}${avatarPath}`;
-};
-
-export default apiClient;
+export default { authClient, userClient };

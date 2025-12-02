@@ -1,10 +1,19 @@
 from fastapi import FastAPI
-from routes import users
+from fastapi.middleware.cors import CORSMiddleware
+from routes import auth
 
-app = FastAPI(title="Auth Service (MongoDB)")
+app = FastAPI(title="Auth Service")
 
-app.include_router(users.router, prefix="/auth", tags=["Authentication"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 
 @app.get("/")
 async def health():
-    return {"status": "ok"}
+    return {"status": "ok", "service": "auth_service"}

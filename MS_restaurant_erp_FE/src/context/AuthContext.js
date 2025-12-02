@@ -14,6 +14,10 @@ import axios from "axios";
 // Tạo context cho authentication
 const AuthContext = createContext(null);
 
+// API URLs từ environment variables
+const AUTH_API_URL = process.env.REACT_APP_AUTH_API_URL || "http://localhost:8001";
+const USER_API_URL = process.env.REACT_APP_USER_API_URL || "http://localhost:8002";
+
 // AuthProvider để bao quanh toàn bộ ứng dụng
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -49,7 +53,8 @@ export const AuthProvider = ({ children }) => {
 
       console.log("Fetching current user with token:", token.substring(0, 20) + "...");
 
-      const response = await axios.get("http://localhost:8000/api/auth/me/", {
+      // Gọi USER SERVICE để lấy thông tin user
+      const response = await axios.get(`${USER_API_URL}/users/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -61,7 +66,7 @@ export const AuthProvider = ({ children }) => {
 
       if (mounted.current) {
         setUser(userData);
-        setError(null); // Clear previous errors
+        setError(null);
       }
 
       return userData;
@@ -74,7 +79,7 @@ export const AuthProvider = ({ children }) => {
           if (isRefreshed && mounted.current) {
             // Thử lại với token mới
             const newToken = localStorage.getItem("access_token");
-            const retryResponse = await axios.get("http://localhost:8000/api/auth/me/", {
+            const retryResponse = await axios.get(`${USER_API_URL}/users/me`, {
               headers: {
                 Authorization: `Bearer ${newToken}`,
               },
@@ -109,7 +114,7 @@ export const AuthProvider = ({ children }) => {
       isCheckingRef.current = false;
       if (mounted.current) setIsChecking(false);
     }
-  }, []);
+  }, [user]);
 
   const updateUser = useCallback((updatedUserData) => {
     console.log("Updating user data:", updatedUserData);
@@ -131,8 +136,9 @@ export const AuthProvider = ({ children }) => {
 
       console.log("Attempting to refresh token...");
 
+      // Gọi AUTH SERVICE để refresh token
       const response = await axios.post(
-        "http://localhost:8000/api/auth/token/refresh/",
+        `${AUTH_API_URL}/auth/token/refresh`,
         {
           refresh: refreshToken,
         },
@@ -184,41 +190,31 @@ export const AuthProvider = ({ children }) => {
 
         console.log("Attempting login with:", { username: credentials.username });
 
-        const response = await axios.post("http://localhost:8000/api/auth/login/", credentials, {
+        // Gọi AUTH SERVICE để login
+        const response = await axios.post(`${AUTH_API_URL}/auth/login`, credentials, {
           timeout: 15000,
         });
 
         const data = response.data;
-        console.log("Login response data:", data); // Debug log
+        console.log("Login response data:", data);
 
         // Kiểm tra response từ backend
-        if (!data.success) {
-          throw new Error(data.message || "Login failed");
-        }
-
-        // Backend trả về access và refresh ở root level
-        if (!data.access || !data.refresh) {
+        if (!data.access_token || !data.refresh_token) {
           console.error("Invalid token format in response:", data);
           throw new Error("Invalid response: missing tokens");
         }
 
-        // Lưu tokens
-        localStorage.setItem("access_token", data.access);
-        localStorage.setItem("refresh_token", data.refresh);
+        // Lưu tokens (FastAPI trả về access_token và refresh_token)
+        localStorage.setItem("access_token", data.access_token);
+        localStorage.setItem("refresh_token", data.refresh_token);
 
-        // Lưu user data nếu có
-        if (data.user && mounted.current) {
-          setUser(data.user);
-          console.log("User data set from login response:", data.user);
-        } else {
-          // Nếu không có user data trong response, fetch từ API
-          try {
-            const userData = await getCurrentUser();
-            console.log("Login successful, user data fetched:", userData);
-          } catch (userError) {
-            console.error("Error fetching user data after login:", userError);
-            // Không fail login nếu không lấy được user data
-          }
+        // Fetch user data từ USER SERVICE
+        try {
+          const userData = await getCurrentUser();
+          console.log("Login successful, user data fetched:", userData);
+        } catch (userError) {
+          console.error("Error fetching user data after login:", userError);
+          // Không fail login nếu không lấy được user data
         }
 
         // Trả về format tương thích
@@ -251,7 +247,8 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Missing required fields");
       }
 
-      const response = await axios.post("http://localhost:8000/api/auth/register/", userData, {
+      // Gọi AUTH SERVICE để register
+      const response = await axios.post(`${AUTH_API_URL}/auth/register`, userData, {
         timeout: 15000,
       });
 
@@ -326,7 +323,7 @@ export const AuthProvider = ({ children }) => {
     } else if (user && mounted.current) {
       setLoading(false);
     }
-  }, []);
+  }, [getCurrentUser, user]);
 
   const value = useMemo(
     () => ({
