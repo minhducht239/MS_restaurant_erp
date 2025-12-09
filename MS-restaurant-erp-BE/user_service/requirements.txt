@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-motor
-python-jose
-python-multipart
-python-dotenv
-pydantic
-email-validator

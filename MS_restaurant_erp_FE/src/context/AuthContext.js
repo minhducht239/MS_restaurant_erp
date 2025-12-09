@@ -14,9 +14,17 @@ import axios from "axios";
 // Tạo context cho authentication
 const AuthContext = createContext(null);
 
-// API URLs từ environment variables
-const AUTH_API_URL = process.env.REACT_APP_AUTH_API_URL || "http://localhost:8001";
-const USER_API_URL = process.env.REACT_APP_USER_API_URL || "http://localhost:8002";
+// ==================================================================
+// CẤU HÌNH URL SERVERLESS
+// ==================================================================
+// 1. AUTH_API_URL: Dán URL bạn lấy được từ lệnh "doctl serverless functions get restaurant/auth_service --url" vào đây
+// Ví dụ: "https://faas-sgp1-xxxx.doserverless.co/api/v1/web/fn-xxx/restaurant/auth_service"
+const AUTH_API_URL = process.env.REACT_APP_AUTH_API_URL || "HAY_DAN_URL_AUTH_SERVICE_CUA_BAN_VAO_DAY";
+
+// 2. USER_API_URL: Sau khi deploy user_service, bạn cũng lấy URL và dán vào đây.
+// Tạm thời để localhost hoặc string rỗng nếu chưa deploy service này.
+const USER_API_URL = process.env.REACT_APP_USER_API_URL || "http://localhost:8002"; 
+// ==================================================================
 
 // AuthProvider để bao quanh toàn bộ ứng dụng
 export const AuthProvider = ({ children }) => {
@@ -51,9 +59,10 @@ export const AuthProvider = ({ children }) => {
         throw new Error("No access token found");
       }
 
-      console.log("Fetching current user with token:", token.substring(0, 20) + "...");
+      console.log("Fetching current user...");
 
-      // Gọi USER SERVICE để lấy thông tin user
+      // LƯU Ý: Khi bạn chuyển User Service sang Serverless, 
+      // bạn có thể cần sửa đường dẫn "/users/me" thành "/me" hoặc giữ nguyên tùy vào cách bạn viết router backend.
       const response = await axios.get(`${USER_API_URL}/users/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -62,7 +71,8 @@ export const AuthProvider = ({ children }) => {
       });
 
       console.log("Current user response:", response.data);
-      const userData = response.data;
+      // Xử lý dữ liệu trả về từ Serverless (thường bọc trong key "body" hoặc trả về trực tiếp tùy backend)
+      const userData = response.data.body || response.data; 
 
       if (mounted.current) {
         setUser(userData);
@@ -86,7 +96,7 @@ export const AuthProvider = ({ children }) => {
               timeout: 10000,
             });
 
-            const userData = retryResponse.data;
+            const userData = retryResponse.data.body || retryResponse.data;
             if (mounted.current) {
               setUser(userData);
               setError(null);
@@ -135,10 +145,8 @@ export const AuthProvider = ({ children }) => {
       }
 
       console.log("Attempting to refresh token...");
-
-      // Gọi AUTH SERVICE để refresh token
       const response = await axios.post(
-        `${AUTH_API_URL}/auth/token/refresh`,
+        `${AUTH_API_URL}/token/refresh`,
         {
           refresh: refreshToken,
         },
@@ -148,11 +156,16 @@ export const AuthProvider = ({ children }) => {
       );
 
       if (response.status === 200) {
-        const data = response.data;
-        localStorage.setItem("access_token", data.access);
+        const data = response.data.body || response.data;
+        
+        const newAccessToken = data.access || data.access_token;
 
-        if (data.refresh) {
-          localStorage.setItem("refresh_token", data.refresh);
+        if (newAccessToken) {
+           localStorage.setItem("access_token", newAccessToken);
+        }
+
+        if (data.refresh || data.refresh_token) {
+          localStorage.setItem("refresh_token", data.refresh || data.refresh_token);
         }
 
         console.log("Token refreshed successfully");
@@ -177,7 +190,6 @@ export const AuthProvider = ({ children }) => {
       try {
         if (mounted.current) setError(null);
 
-        // Xử lý 2 format: login(email, password) hoặc login({username, password})
         let credentials;
         if (typeof emailOrCredentials === "object") {
           credentials = emailOrCredentials;
@@ -190,39 +202,38 @@ export const AuthProvider = ({ children }) => {
 
         console.log("Attempting login with:", { username: credentials.username });
 
-        // Gọi AUTH SERVICE để login
-        const response = await axios.post(`${AUTH_API_URL}/auth/login`, credentials, {
+        
+        const response = await axios.post(`${AUTH_API_URL}/login`, credentials, {
           timeout: 15000,
         });
 
-        const data = response.data;
+        
+        const data = response.data.body || response.data;
         console.log("Login response data:", data);
 
-        // Kiểm tra response từ backend
         if (!data.access_token || !data.refresh_token) {
           console.error("Invalid token format in response:", data);
           throw new Error("Invalid response: missing tokens");
         }
 
-        // Lưu tokens (FastAPI trả về access_token và refresh_token)
         localStorage.setItem("access_token", data.access_token);
         localStorage.setItem("refresh_token", data.refresh_token);
 
-        // Fetch user data từ USER SERVICE
+        
         try {
-          const userData = await getCurrentUser();
-          console.log("Login successful, user data fetched:", userData);
+          await getCurrentUser();
+          console.log("Login successful, user data fetched");
         } catch (userError) {
-          console.error("Error fetching user data after login:", userError);
-          // Không fail login nếu không lấy được user data
+          console.warn("Could not fetch user data immediately after login (Check User Service URL)", userError);
+        
         }
 
-        // Trả về format tương thích
         return typeof emailOrCredentials === "object" ? { success: true } : true;
       } catch (error) {
         console.error("Login error:", error);
 
         const errorMessage =
+          error.response?.data?.body?.detail ||
           error.response?.data?.detail ||
           error.response?.data?.message ||
           error.message ||
@@ -230,7 +241,6 @@ export const AuthProvider = ({ children }) => {
 
         if (mounted.current) setError(errorMessage);
 
-        // Trả về format tương thích
         return typeof emailOrCredentials === "object"
           ? { success: false, error: errorMessage }
           : false;
@@ -247,8 +257,8 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Missing required fields");
       }
 
-      // Gọi AUTH SERVICE để register
-      const response = await axios.post(`${AUTH_API_URL}/auth/register`, userData, {
+      
+      const response = await axios.post(`${AUTH_API_URL}/register`, userData, {
         timeout: 15000,
       });
 
@@ -262,6 +272,7 @@ export const AuthProvider = ({ children }) => {
       console.error("Register error:", error);
 
       const errorMessage =
+        error.response?.data?.body?.detail ||
         error.response?.data?.detail ||
         error.response?.data?.message ||
         Object.values(error.response?.data || {})
@@ -306,12 +317,14 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error("Auth check error:", error);
 
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-
-        if (mounted.current) {
-          setUser(null);
-          setError("Session expired. Please login again.");
+        // Không tự động logout nếu chỉ là lỗi mạng, chỉ logout khi 401 thật sự
+        if (error.response?.status === 401) {
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("refresh_token");
+            if (mounted.current) {
+                setUser(null);
+                setError("Session expired. Please login again.");
+            }
         }
       } finally {
         if (mounted.current) setLoading(false);
@@ -356,12 +369,10 @@ export const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Kiểm tra props cho AuthProvider
 AuthProvider.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-// Custom hook để sử dụng AuthContext
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

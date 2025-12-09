@@ -1,6 +1,0 @@
-flask
-flask-restful
-flask-cors
-pymongo
-python-dotenv
-python-jose[cryptography]
