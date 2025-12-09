@@ -1,6 +1,3 @@
-flask
-flask-restful
-flask-cors
 requests
-python-dotenv
 python-jose[cryptography]
+python-dotenv
