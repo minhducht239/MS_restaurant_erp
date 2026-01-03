@@ -29,14 +29,14 @@ export const getDashboardStatistics = async () => {
 
   return logApiCall(
     "getDashboardStatistics",
-    axios.get(`${API_URL}/dashboard/statistics/`, { headers }).then((response) => response.data)
+    axios.get(`${API_URL}/api/dashboard/statistics/`, { headers }).then((response) => response.data)
   );
 };
 
 // Lấy dữ liệu doanh thu theo tuần
 export const getWeeklyRevenue = async () => {
   try {
-    const response = await axios.get(`${API_URL}/dashboard/weekly-revenue/`, {
+    const response = await axios.get(`${API_URL}/api/dashboard/weekly-revenue/`, {
       headers: getAuthHeader(),
     });
 
@@ -58,7 +58,7 @@ export const getWeeklyRevenue = async () => {
 // Thêm hàm doanh thu theo tháng
 export const getMonthlyRevenue = async () => {
   try {
-    const response = await axios.get(`${API_URL}/dashboard/monthly-revenue/`, {
+    const response = await axios.get(`${API_URL}/api/dashboard/monthly-revenue/`, {
       headers: getAuthHeader(),
     });
 
@@ -67,19 +67,16 @@ export const getMonthlyRevenue = async () => {
     return response.data;
   } catch (error) {
     console.error("Error fetching monthly revenue:", error);
-    // Trả về dữ liệu mẫu khi có lỗi
-    return [
-      5000000, 7500000, 9000000, 8500000, 10000000, 11000000, 12000000, 10500000, 9800000, 11500000,
-      13000000, 14000000,
-    ];
+    // Trả về mảng rỗng khi có lỗi
+    return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   }
 };
 
 // Lấy top món ăn bán chạy
 export const getTopSellingItems = async () => {
   try {
-    console.log("Calling top-selling API...");
-    const response = await axios.get(`${API_URL}/dashboard/top-selling/`, {
+    console.log("Calling top-items API...");
+    const response = await axios.get(`${API_URL}/api/dashboard/top-items/`, {
       headers: getAuthHeader(),
     });
 
@@ -87,22 +84,10 @@ export const getTopSellingItems = async () => {
     return response.data;
   } catch (error) {
     console.error("Error fetching top selling items:", error);
-    // Trả về dữ liệu mẫu khi có lỗi
+    // Trả về dữ liệu rỗng khi có lỗi
     return {
-      food: [
-        { name: "Gà rán", value: 35, sold: 24, trend: "up" },
-        { name: "Phở bò", value: 25, sold: 18, trend: "up" },
-        { name: "Bánh mì", value: 20, sold: 14, trend: "down" },
-        { name: "Cơm tấm", value: 15, sold: 10, trend: "up" },
-        { name: "Bún chả", value: 5, sold: 3, trend: "down" },
-      ],
-      drinks: [
-        { name: "Trà sữa", value: 40, sold: 28, trend: "up" },
-        { name: "Cà phê", value: 30, sold: 21, trend: "up" },
-        { name: "Nước cam", value: 15, sold: 10, trend: "down" },
-        { name: "Sinh tố", value: 10, sold: 7, trend: "up" },
-        { name: "Nước ngọt", value: 5, sold: 4, trend: "down" },
-      ],
+      food: [],
+      drinks: [],
     };
   }
 };

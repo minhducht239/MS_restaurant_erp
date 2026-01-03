@@ -1,10 +1,9 @@
 import axios from "axios";
 
-// Tách riêng 2 API URLs
+// Auth Service URL - xử lý cả authentication và user profile
 const AUTH_API_URL = process.env.REACT_APP_AUTH_API_URL || "http://localhost:8001";
-const USER_API_URL = process.env.REACT_APP_USER_API_URL || "http://localhost:8002";
 
-// Auth API Client (cho authentication)
+// Auth API Client
 const authClient = axios.create({
   baseURL: AUTH_API_URL,
   timeout: 15000,
@@ -13,17 +12,8 @@ const authClient = axios.create({
   },
 });
 
-// User API Client (cho user profile)
-const userClient = axios.create({
-  baseURL: USER_API_URL,
-  timeout: 15000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-// Add token to user requests
-userClient.interceptors.request.use(
+// Add token to auth requests
+authClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("access_token");
     if (token) {
@@ -34,8 +24,8 @@ userClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle token refresh for user client
-userClient.interceptors.response.use(
+// Handle token refresh
+authClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
@@ -47,8 +37,8 @@ userClient.interceptors.response.use(
         const refreshToken = localStorage.getItem("refresh_token");
         if (!refreshToken) throw new Error("No refresh token");
 
-        // Gọi AUTH SERVICE để refresh token
-        const response = await authClient.post("/auth/token/refresh", {
+        // Refresh token
+        const response = await axios.post(`${AUTH_API_URL}/api/auth/token/refresh/`, {
           refresh: refreshToken,
         });
 
@@ -57,7 +47,7 @@ userClient.interceptors.response.use(
 
         // Retry original request
         originalRequest.headers.Authorization = `Bearer ${access}`;
-        return userClient(originalRequest);
+        return authClient(originalRequest);
       } catch (refreshError) {
         // Refresh failed, redirect to login
         localStorage.removeItem("access_token");
@@ -100,13 +90,19 @@ const handleApiError = (error, context = "") => {
   }
 };
 
-// ============= USER SERVICE APIs =============
+// ============= USER PROFILE APIs (via Auth Service) =============
 
 export const getCurrentUser = async () => {
   try {
     console.log("=== GET CURRENT USER ===");
-    const response = await userClient.get("/users/me");
+    const response = await authClient.get("/api/auth/profile/");
     console.log("Current user response:", response.data);
+
+    // Backend trả về {success: true, user: {...}}
+    if (response.data.success && response.data.user) {
+      return response.data.user;
+    }
+
     return response.data;
   } catch (error) {
     handleApiError(error, "getCurrentUser");
@@ -138,7 +134,7 @@ export const updateUserProfile = async (profileData) => {
 
     // Xử lý phone
     if (profileData.phone && profileData.phone.trim()) {
-      dataToSend.phone = profileData.phone.trim();
+      dataToSend.phone_number = profileData.phone.trim();
     }
 
     if (profileData.address !== undefined) {
@@ -155,10 +151,16 @@ export const updateUserProfile = async (profileData) => {
       throw new Error("No data to update");
     }
 
-    // Gọi USER SERVICE
-    const response = await userClient.patch("/users/me", dataToSend);
+    // Gọi AUTH SERVICE
+    const response = await authClient.patch("/api/auth/profile/", dataToSend);
 
     console.log("Update response:", response.data);
+
+    // Backend trả về {success: true, user: {...}}
+    if (response.data.success && response.data.user) {
+      return response.data.user;
+    }
+
     return response.data;
   } catch (error) {
     handleApiError(error, "updateUserProfile");
@@ -178,11 +180,11 @@ export const uploadAvatar = async (file) => {
       formData = file;
     } else {
       formData = new FormData();
-      formData.append("file", file); // Backend mới dùng "file" thay vì "avatar"
+      formData.append("avatar", file);
     }
 
-    // Gọi USER SERVICE
-    const response = await userClient.post("/users/upload-avatar", formData, {
+    // Gọi AUTH SERVICE
+    const response = await authClient.post("/api/auth/profile/avatar/", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -198,8 +200,8 @@ export const uploadAvatar = async (file) => {
 export const deleteAvatar = async () => {
   try {
     console.log("=== DELETE AVATAR ===");
-    // Gọi USER SERVICE
-    const response = await userClient.delete("/users/avatar");
+    // Gọi AUTH SERVICE
+    const response = await authClient.delete("/api/auth/profile/avatar/");
     console.log("Delete avatar response:", response.data);
     return response.data;
   } catch (error) {
@@ -215,9 +217,8 @@ export const getAvatarUrl = (avatarPath) => {
     return avatarPath;
   }
 
-  // If relative path, prepend USER API base URL
-  const baseUrl = USER_API_URL.replace("/api", "");
-  return `${baseUrl}${avatarPath}`;
+  // If relative path, prepend AUTH API base URL
+  return `${AUTH_API_URL}${avatarPath}`;
 };
 
 // ============= AUTH SERVICE APIs =============
@@ -243,25 +244,27 @@ export const changeUserPassword = async (passwordData) => {
       throw new Error("New password must be at least 6 characters");
     }
 
-    // Get current user để lấy username
-    const currentUser = await getCurrentUser();
-
     const dataToSend = {
-      current_password: passwordData.currentPassword,
+      old_password: passwordData.currentPassword,
       new_password: passwordData.newPassword,
-      username: currentUser.username,
     };
 
     console.log("Sending password change request...");
 
     // Gọi AUTH SERVICE
-    const response = await authClient.put("/auth/change-password", dataToSend);
+    const response = await authClient.post("/api/auth/profile/change-password/", dataToSend);
 
     console.log("Password change response:", response.data);
+
+    // Backend có thể trả về {success: true, ...}
+    if (response.data.success !== undefined) {
+      return response.data;
+    }
+
     return response.data;
   } catch (error) {
     handleApiError(error, "changeUserPassword");
   }
 };
 
-export default { authClient, userClient };
+export default { authClient };

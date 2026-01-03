@@ -289,8 +289,12 @@ function Menu() {
       console.log(`Toggling availability for item: ${item.name} (ID: ${item.id})`);
       console.log(`Current status: ${item.is_available} -> ${!item.is_available}`);
 
+      // Only send necessary fields to avoid image URL being sent as file
       const updatedData = {
-        ...item,
+        name: item.name,
+        description: item.description || "",
+        price: item.price,
+        category: item.category,
         is_available: !item.is_available,
       };
 

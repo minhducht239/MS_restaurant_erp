@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -12,10 +12,6 @@ import Configurator from "examples/Configurator";
 // Material Dashboard 2 React themes
 import theme from "assets/theme";
 import themeDark from "assets/theme-dark";
-
-// RTL plugins
-import rtlPlugin from "stylis-plugin-rtl";
-import createCache from "@emotion/cache";
 
 // Material Dashboard 2 React routes - import the basic routes
 import routes from "routes";
@@ -54,6 +50,36 @@ ProtectedRoute.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
+// Admin Route Component - chỉ cho phép admin truy cập
+const AdminRoute = ({ children }) => {
+  const { isAuthenticated, loading, user } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return (
+      <MDBox display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <div>Loading...</div>
+      </MDBox>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/authentication/sign-in" state={{ from: location }} />;
+  }
+
+  // Kiểm tra quyền admin
+  const isAdmin = user?.role === "admin" || user?.is_superuser || user?.is_staff;
+  if (!isAdmin) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return children;
+};
+
+AdminRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
 // Nội dung chính của ứng dụng - sử dụng useAuth bên trong AuthProvider
 function AppContent() {
   const [controller, dispatch] = useMaterialUIController();
@@ -67,13 +93,23 @@ function AppContent() {
     whiteSidenav,
     darkMode,
   } = controller;
-  const [rtlCache, setRtlCache] = useState(null);
   const { pathname } = useLocation();
-  const { isAuthenticated, logout } = useAuth();
-  // Lọc và điều chỉnh routes dựa trên trạng thái đăng nhập
+  const { isAuthenticated, logout, user } = useAuth();
+
+  // Kiểm tra user có phải admin không
+  const isAdmin = user?.role === "admin" || user?.is_superuser || user?.is_staff;
+
+  // Lọc và điều chỉnh routes dựa trên trạng thái đăng nhập và quyền
   const displayRoutes = [...routes].filter((route) => {
     // Ẩn các route đăng nhập/đăng ký nếu đã xác thực
     if (route.authRoute && isAuthenticated) return false;
+
+    // Ẩn các route admin nếu user không phải admin
+    if (route.adminOnly && !isAdmin) return false;
+
+    // Ẩn divider và title của admin nếu không phải admin
+    if ((route.key === "divider-admin" || route.key === "admin-title") && !isAdmin) return false;
+
     return true;
   });
 
@@ -89,15 +125,8 @@ function AppContent() {
     });
   }
 
-  // Cache for the rtl
-  useMemo(() => {
-    const cacheRtl = createCache({
-      key: "rtl",
-      stylisPlugins: [rtlPlugin],
-    });
-
-    setRtlCache(cacheRtl);
-  }, []);
+  // Change the openConfigurator state
+  const handleConfiguratorOpen = () => setOpenConfigurator(dispatch, !openConfigurator);
 
   // Open sidenav when mouse enter on mini sidenav
   const handleOnMouseEnter = () => {
@@ -112,9 +141,6 @@ function AppContent() {
       setMiniSidenav(dispatch, true);
     }
   };
-
-  // Change the openConfigurator state
-  const handleConfiguratorOpen = () => setOpenConfigurator(dispatch, !openConfigurator);
 
   // Setting the dir attribute for the body element
   useEffect(() => {
@@ -134,6 +160,18 @@ function AppContent() {
       }
 
       if (route.route && route.route !== "#") {
+        // Route chỉ dành cho admin
+        if (route.adminOnly) {
+          return (
+            <Route
+              exact
+              path={route.route}
+              element={<AdminRoute>{route.component}</AdminRoute>}
+              key={route.key}
+            />
+          );
+        }
+        // Route yêu cầu đăng nhập
         if (route.protected) {
           return (
             <Route
@@ -199,7 +237,7 @@ function AppContent() {
       )}
       {layout === "vr" && <Configurator />}
       <Routes>
-        {routeComponents(displayRoutes)}
+        {routeComponents(routes)}
         <Route path="*" element={<Navigate to="/dashboard" />} />
       </Routes>
     </ThemeProvider>

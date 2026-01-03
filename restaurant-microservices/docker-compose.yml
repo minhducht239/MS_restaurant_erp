@@ -1,0 +1,268 @@
+version: '3.8'
+
+services:
+  # ===========================================
+  # DATABASE SERVICES
+  # ===========================================
+  mysql:
+    image: mysql:8.0
+    container_name: restaurant-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-MinhDucA123@}
+      MYSQL_DATABASE: restaurant_erp
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - restaurant-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: restaurant-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - restaurant-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================
+  # API GATEWAY
+  # ===========================================
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: restaurant-gateway
+    restart: always
+    ports:
+      - "8000:80"
+    depends_on:
+      - auth-service
+      - menu-service
+      - billing-service
+      - customer-service
+      - table-service
+      - staff-service
+      - reservation-service
+    networks:
+      - restaurant-network
+
+  # ===========================================
+  # MICROSERVICES
+  # ===========================================
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: restaurant-auth-service
+    restart: always
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-auth-service-key}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=restaurant_erp
+      - DB_USER=root
+      - DB_PASSWORD=${MYSQL_ROOT_PASSWORD:-MinhDucA123@}
+      - REDIS_URL=redis://redis:6379/0
+    ports:
+      - "8001:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - media_data:/app/media
+    networks:
+      - restaurant-network
+
+  menu-service:
+    build:
+      context: ./services/menu-service
+      dockerfile: Dockerfile
+    container_name: restaurant-menu-service
+    restart: always
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-menu-service-key}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=restaurant_erp
+      - DB_USER=root
+      - DB_PASSWORD=${MYSQL_ROOT_PASSWORD:-MinhDucA123@}
+      - REDIS_URL=redis://redis:6379/1
+    ports:
+      - "8002:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - media_data:/app/media
+    networks:
+      - restaurant-network
+
+  billing-service:
+    build:
+      context: ./services/billing-service
+      dockerfile: Dockerfile
+    container_name: restaurant-billing-service
+    restart: always
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-billing-service-key}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=restaurant_erp
+      - DB_USER=root
+      - DB_PASSWORD=${MYSQL_ROOT_PASSWORD:-MinhDucA123@}
+      - REDIS_URL=redis://redis:6379/2
+      - AUTH_SERVICE_URL=http://auth-service:8000
+      - CUSTOMER_SERVICE_URL=http://customer-service:8000
+    ports:
+      - "8003:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+
+  customer-service:
+    build:
+      context: ./services/customer-service
+      dockerfile: Dockerfile
+    container_name: restaurant-customer-service
+    restart: always
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-customer-service-key}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=restaurant_erp
+      - DB_USER=root
+      - DB_PASSWORD=${MYSQL_ROOT_PASSWORD:-MinhDucA123@}
+      - REDIS_URL=redis://redis:6379/3
+    ports:
+      - "8004:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+
+  table-service:
+    build:
+      context: ./services/table-service
+      dockerfile: Dockerfile
+    container_name: restaurant-table-service
+    restart: always
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-table-service-key}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=restaurant_erp
+      - DB_USER=root
+      - DB_PASSWORD=${MYSQL_ROOT_PASSWORD:-MinhDucA123@}
+      - REDIS_URL=redis://redis:6379/4
+      - AUTH_SERVICE_URL=http://auth-service:8000
+      - MENU_SERVICE_URL=http://menu-service:8000
+    ports:
+      - "8005:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+
+  staff-service:
+    build:
+      context: ./services/staff-service
+      dockerfile: Dockerfile
+    container_name: restaurant-staff-service
+    restart: always
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-staff-service-key}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=restaurant_erp
+      - DB_USER=root
+      - DB_PASSWORD=${MYSQL_ROOT_PASSWORD:-MinhDucA123@}
+      - REDIS_URL=redis://redis:6379/5
+    ports:
+      - "8006:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+
+  reservation-service:
+    build:
+      context: ./services/reservation-service
+      dockerfile: Dockerfile
+    container_name: restaurant-reservation-service
+    restart: always
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-reservation-service-key}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=restaurant_erp
+      - DB_USER=root
+      - DB_PASSWORD=${MYSQL_ROOT_PASSWORD:-MinhDucA123@}
+      - REDIS_URL=redis://redis:6379/6
+    ports:
+      - "8007:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+
+  dashboard-service:
+    build:
+      context: ./services/dashboard-service
+      dockerfile: Dockerfile
+    container_name: restaurant-dashboard-service
+    restart: always
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-dashboard-service-key}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=restaurant_erp
+      - DB_USER=root
+      - DB_PASSWORD=${MYSQL_ROOT_PASSWORD:-MinhDucA123@}
+      - REDIS_URL=redis://redis:6379/7
+    ports:
+      - "8008:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+
+networks:
+  restaurant-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
+  media_data:

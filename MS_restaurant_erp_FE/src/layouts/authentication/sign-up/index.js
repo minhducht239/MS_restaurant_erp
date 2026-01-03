@@ -28,6 +28,7 @@ import bgImage from "assets/images/Background-sign-up.jpg";
 function Cover() {
   const [formData, setFormData] = useState({
     name: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -77,6 +78,15 @@ function Cover() {
       errors.name = "Tên không được để trống";
     } else if (formData.name.trim().length < 2) {
       errors.name = "Tên phải có ít nhất 2 ký tự";
+    }
+
+    // Validate username
+    if (!formData.username.trim()) {
+      errors.username = "Tên đăng nhập không được để trống";
+    } else if (formData.username.trim().length < 3) {
+      errors.username = "Tên đăng nhập phải có ít nhất 3 ký tự";
+    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      errors.username = "Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới";
     }
 
     // Validate email
@@ -139,13 +149,18 @@ function Cover() {
     setLoading(true);
 
     try {
+      // Tách họ và tên
+      const nameParts = formData.name.trim().split(/\s+/);
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+
       console.log("Sending registration request:", {
-        username: formData.email,
+        username: formData.username,
         email: formData.email,
         password: formData.password,
-        confirm_password: formData.confirmPassword,
-        first_name: formData.name,
-        last_name: "",
+        password_confirm: formData.confirmPassword,
+        first_name: firstName,
+        last_name: lastName,
       });
 
       const response = await fetch("http://localhost:8000/api/auth/register/", {
@@ -154,12 +169,12 @@ function Cover() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: formData.email,
+          username: formData.username,
           email: formData.email,
           password: formData.password,
-          confirm_password: formData.confirmPassword,
-          first_name: formData.name,
-          last_name: "",
+          password_confirm: formData.confirmPassword,
+          first_name: firstName,
+          last_name: lastName,
         }),
       });
 
@@ -252,6 +267,28 @@ function Cover() {
               {validationErrors.name && (
                 <MDTypography variant="caption" color="error" fontWeight="light" mt={0.5}>
                   {validationErrors.name}
+                </MDTypography>
+              )}
+            </MDBox>
+
+            {/* Username Field */}
+            <MDBox mb={2}>
+              <MDInput
+                type="text"
+                label="Tên đăng nhập"
+                variant="standard"
+                fullWidth
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                error={!!validationErrors.username}
+                disabled={loading}
+                placeholder="vd: nguyenvana"
+              />
+              {validationErrors.username && (
+                <MDTypography variant="caption" color="error" fontWeight="light" mt={0.5}>
+                  {validationErrors.username}
                 </MDTypography>
               )}
             </MDBox>

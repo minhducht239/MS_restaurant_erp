@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 old_backend/
 restaurant-erp-backend/
+test_local.py

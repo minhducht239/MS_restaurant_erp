@@ -14,16 +14,15 @@ export const getTables = async (filters = {}) => {
   try {
     console.log("Getting tables with filters:", filters);
     const { floor, status } = filters;
-    let url = `${API_URL}/tables/`;
+    let url = `${API_URL}/api/tables/`;
 
     // Thêm query params nếu có
     const params = new URLSearchParams();
+    params.append("page_size", "100"); // Lấy tất cả bàn
     if (floor !== undefined) params.append("floor", floor);
     if (status) params.append("status", status);
 
-    if (params.toString()) {
-      url += `?${params.toString()}`;
-    }
+    url += `?${params.toString()}`;
 
     console.log("API URL for tables:", url);
 
@@ -34,6 +33,10 @@ export const getTables = async (filters = {}) => {
     console.log("Tables API response:", response);
     console.log("Tables data:", response.data);
 
+    // Handle paginated response
+    if (response.data && response.data.results) {
+      return response.data.results;
+    }
     return response.data;
   } catch (error) {
     console.error("Error fetching tables:", error);
@@ -55,7 +58,7 @@ export const getTableDetails = async (tableId) => {
   if (!tableId) throw new Error("Table ID is required");
 
   try {
-    const response = await axios.get(`${API_URL}/tables/${tableId}/`, {
+    const response = await axios.get(`${API_URL}/api/tables/${tableId}/`, {
       headers: getAuthHeader(),
     });
     return response.data;
@@ -73,7 +76,7 @@ export const getTableOrders = async (tableId) => {
   if (!tableId) throw new Error("Table ID is required");
 
   try {
-    const response = await axios.get(`${API_URL}/tables/${tableId}/orders/`, {
+    const response = await axios.get(`${API_URL}/api/tables/${tableId}/orders/`, {
       headers: getAuthHeader(),
     });
     return response.data;
@@ -99,7 +102,7 @@ export const updateTableStatus = async (tableId, status) => {
     console.log(`API: Updating table ${tableId} status to: ${status}`);
 
     const response = await axios.patch(
-      `${API_URL}/tables/${tableId}/`,
+      `${API_URL}/api/tables/${tableId}/`,
       { status },
       {
         headers: {
@@ -126,7 +129,7 @@ export const addOrderToTable = async (tableId, items) => {
     console.log(`Adding items to table ${tableId}:`, items);
 
     const response = await axios.post(
-      `${API_URL}/tables/${tableId}/add_order/`,
+      `${API_URL}/api/tables/${tableId}/add_order/`,
       { items }, // Gửi items đã được merge
       {
         headers: {
@@ -161,11 +164,11 @@ export const createBillFromTable = async (tableId, billData = {}) => {
     };
 
     console.log("Sending bill creation request:");
-    console.log("- URL:", `${API_URL}/tables/${tableId}/create_bill/`);
+    console.log("- URL:", `${API_URL}/api/tables/${tableId}/create_bill/`);
     console.log("- Data:", requestData);
 
     const response = await axios.post(
-      `${API_URL}/tables/${tableId}/create_bill/`,
+      `${API_URL}/api/tables/${tableId}/create_bill/`,
       requestData,
       {
         headers: {
@@ -213,7 +216,7 @@ export const createTable = async (tableData) => {
   if (!tableData || !tableData.name) throw new Error("Table name is required");
 
   try {
-    const response = await axios.post(`${API_URL}/tables/`, tableData, {
+    const response = await axios.post(`${API_URL}/api/tables/`, tableData, {
       headers: {
         ...getAuthHeader(),
         "Content-Type": "application/json",
@@ -237,7 +240,7 @@ export const deleteTable = async (tableId) => {
   if (!tableId) throw new Error("Table ID is required");
 
   try {
-    const response = await axios.delete(`${API_URL}/tables/${tableId}/`, {
+    const response = await axios.delete(`${API_URL}/api/tables/${tableId}/`, {
       headers: getAuthHeader(),
     });
     return response.data;

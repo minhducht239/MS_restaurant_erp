@@ -1,0 +1,10 @@
+-- Initialize databases for microservices
+-- All services share the same database but use different tables
+
+CREATE DATABASE IF NOT EXISTS restaurant_erp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE restaurant_erp;
+
+-- Grant permissions
+GRANT ALL PRIVILEGES ON restaurant_erp.* TO 'root'@'%';
+FLUSH PRIVILEGES;

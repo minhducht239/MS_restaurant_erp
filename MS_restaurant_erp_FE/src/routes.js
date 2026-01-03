@@ -9,6 +9,9 @@ import Menu from "layouts/menu";
 import MenuItemDetail from "layouts/menu/components/MenuItemDetail";
 import Customer from "layouts/customerTable";
 import TableManagement from "layouts/table-management";
+import UserManagement from "layouts/user-management";
+import ActivityLogs from "layouts/activity-logs";
+import RoleManagement from "layouts/role-management";
 // @mui icons
 import Icon from "@mui/material/Icon";
 
@@ -91,6 +94,45 @@ const routes = [
     route: "/account-settings",
     component: <AccountSettings />,
     protected: true,
+  },
+  {
+    type: "divider",
+    key: "divider-admin",
+  },
+  {
+    type: "title",
+    title: "Quản trị",
+    key: "admin-title",
+  },
+  {
+    type: "collapse",
+    name: "Quản lý người dùng",
+    key: "user-management",
+    icon: <Icon fontSize="small">manage_accounts</Icon>,
+    route: "/user-management",
+    component: <UserManagement />,
+    protected: true,
+    adminOnly: true,
+  },
+  {
+    type: "collapse",
+    name: "Vai trò & Quyền",
+    key: "role-management",
+    icon: <Icon fontSize="small">security</Icon>,
+    route: "/role-management",
+    component: <RoleManagement />,
+    protected: true,
+    adminOnly: true,
+  },
+  {
+    type: "collapse",
+    name: "Lịch sử hoạt động",
+    key: "activity-logs",
+    icon: <Icon fontSize="small">history</Icon>,
+    route: "/activity-logs",
+    component: <ActivityLogs />,
+    protected: true,
+    adminOnly: true,
   },
   // Thêm các routes đăng nhập/đăng ký vào mảng cơ bản
   {

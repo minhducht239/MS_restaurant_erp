@@ -29,7 +29,7 @@ import { useAuth } from "context/AuthContext"; // Import useAuth hook
 
 function Basic() {
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: "",
   });
   const [rememberMe, setRememberMe] = useState(false);
@@ -72,13 +72,8 @@ function Basic() {
     // Basic validation
     const errors = {};
 
-    if (!formData.email?.trim()) {
-      errors.email = "Email không được để trống";
-    } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
-        errors.email = "Email không hợp lệ";
-      }
+    if (!formData.username?.trim()) {
+      errors.username = "Username hoặc Email không được để trống";
     }
 
     if (!formData.password) {
@@ -93,17 +88,17 @@ function Basic() {
     setLoading(true);
 
     try {
-      console.log("Attempting login with:", formData.email);
+      console.log("Attempting login with:", formData.username);
 
       // Sử dụng AuthContext login function
-      const success = await login(formData.email, formData.password);
+      const success = await login(formData.username, formData.password);
 
       if (success) {
         console.log("Login successful, redirecting to dashboard");
 
-        // Lưu email nếu chọn "remember me"
+        // Lưu username nếu chọn "remember me"
         if (rememberMe) {
-          localStorage.setItem("remember_user", formData.email);
+          localStorage.setItem("remember_user", formData.username);
         } else {
           localStorage.removeItem("remember_user");
         }
@@ -123,11 +118,11 @@ function Basic() {
     }
   };
 
-  // Sử dụng useEffect thay vì useState cho việc load remembered email
+  // Sử dụng useEffect thay vì useState cho việc load remembered username
   useEffect(() => {
-    const savedEmail = localStorage.getItem("remember_user");
-    if (savedEmail) {
-      setFormData((prev) => ({ ...prev, email: savedEmail }));
+    const savedUser = localStorage.getItem("remember_user");
+    if (savedUser) {
+      setFormData((prev) => ({ ...prev, username: savedUser }));
       setRememberMe(true);
     }
   }, []);
@@ -170,19 +165,19 @@ function Basic() {
 
             <MDBox mb={2}>
               <MDInput
-                type="email"
-                label="Email"
+                type="text"
+                label="Username or Email"
                 fullWidth
-                name="email"
-                value={formData.email}
+                name="username"
+                value={formData.username}
                 onChange={handleChange}
-                error={!!validationErrors.email}
+                error={!!validationErrors.username}
                 disabled={loading}
                 required
               />
-              {validationErrors.email && (
+              {validationErrors.username && (
                 <MDTypography variant="caption" color="error" sx={{ fontSize: "0.75rem", mt: 0.5 }}>
-                  {validationErrors.email}
+                  {validationErrors.username}
                 </MDTypography>
               )}
             </MDBox>

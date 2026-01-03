@@ -15,15 +15,9 @@ import axios from "axios";
 const AuthContext = createContext(null);
 
 // ==================================================================
-// CẤU HÌNH URL SERVERLESS
+// CẤU HÌNH URL API
 // ==================================================================
-// 1. AUTH_API_URL: Dán URL bạn lấy được từ lệnh "doctl serverless functions get restaurant/auth_service --url" vào đây
-// Ví dụ: "https://faas-sgp1-xxxx.doserverless.co/api/v1/web/fn-xxx/restaurant/auth_service"
-const AUTH_API_URL = process.env.REACT_APP_AUTH_API_URL || "HAY_DAN_URL_AUTH_SERVICE_CUA_BAN_VAO_DAY";
-
-// 2. USER_API_URL: Sau khi deploy user_service, bạn cũng lấy URL và dán vào đây.
-// Tạm thời để localhost hoặc string rỗng nếu chưa deploy service này.
-const USER_API_URL = process.env.REACT_APP_USER_API_URL || "http://localhost:8002"; 
+const AUTH_API_URL = process.env.REACT_APP_AUTH_API_URL || "http://localhost:8001";
 // ==================================================================
 
 // AuthProvider để bao quanh toàn bộ ứng dụng
@@ -61,9 +55,8 @@ export const AuthProvider = ({ children }) => {
 
       console.log("Fetching current user...");
 
-      // LƯU Ý: Khi bạn chuyển User Service sang Serverless, 
-      // bạn có thể cần sửa đường dẫn "/users/me" thành "/me" hoặc giữ nguyên tùy vào cách bạn viết router backend.
-      const response = await axios.get(`${USER_API_URL}/users/me`, {
+      // Gọi Auth Service để lấy profile
+      const response = await axios.get(`${AUTH_API_URL}/api/auth/profile/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -71,8 +64,8 @@ export const AuthProvider = ({ children }) => {
       });
 
       console.log("Current user response:", response.data);
-      // Xử lý dữ liệu trả về từ Serverless (thường bọc trong key "body" hoặc trả về trực tiếp tùy backend)
-      const userData = response.data.body || response.data; 
+      // Xử lý dữ liệu trả về - backend trả về {success: true, user: {...}}
+      const userData = response.data.user || response.data.body?.user || response.data;
 
       if (mounted.current) {
         setUser(userData);
@@ -89,14 +82,15 @@ export const AuthProvider = ({ children }) => {
           if (isRefreshed && mounted.current) {
             // Thử lại với token mới
             const newToken = localStorage.getItem("access_token");
-            const retryResponse = await axios.get(`${USER_API_URL}/users/me`, {
+            const retryResponse = await axios.get(`${AUTH_API_URL}/api/auth/profile/`, {
               headers: {
                 Authorization: `Bearer ${newToken}`,
               },
               timeout: 10000,
             });
 
-            const userData = retryResponse.data.body || retryResponse.data;
+            const userData =
+              retryResponse.data.user || retryResponse.data.body?.user || retryResponse.data;
             if (mounted.current) {
               setUser(userData);
               setError(null);
@@ -146,7 +140,7 @@ export const AuthProvider = ({ children }) => {
 
       console.log("Attempting to refresh token...");
       const response = await axios.post(
-        `${AUTH_API_URL}/token/refresh`,
+        `${AUTH_API_URL}/api/auth/token/refresh/`,
         {
           refresh: refreshToken,
         },
@@ -157,11 +151,11 @@ export const AuthProvider = ({ children }) => {
 
       if (response.status === 200) {
         const data = response.data.body || response.data;
-        
+
         const newAccessToken = data.access || data.access_token;
 
         if (newAccessToken) {
-           localStorage.setItem("access_token", newAccessToken);
+          localStorage.setItem("access_token", newAccessToken);
         }
 
         if (data.refresh || data.refresh_token) {
@@ -202,30 +196,33 @@ export const AuthProvider = ({ children }) => {
 
         console.log("Attempting login with:", { username: credentials.username });
 
-        
-        const response = await axios.post(`${AUTH_API_URL}/login`, credentials, {
+        const response = await axios.post(`${AUTH_API_URL}/api/auth/login/`, credentials, {
           timeout: 15000,
         });
 
-        
         const data = response.data.body || response.data;
         console.log("Login response data:", data);
 
-        if (!data.access_token || !data.refresh_token) {
+        // Backend trả về tokens trong object khác
+        const accessToken = data.access_token || data.tokens?.access;
+        const refreshToken = data.refresh_token || data.tokens?.refresh;
+
+        if (!accessToken || !refreshToken) {
           console.error("Invalid token format in response:", data);
           throw new Error("Invalid response: missing tokens");
         }
 
-        localStorage.setItem("access_token", data.access_token);
-        localStorage.setItem("refresh_token", data.refresh_token);
+        localStorage.setItem("access_token", accessToken);
+        localStorage.setItem("refresh_token", refreshToken);
 
-        
         try {
           await getCurrentUser();
           console.log("Login successful, user data fetched");
         } catch (userError) {
-          console.warn("Could not fetch user data immediately after login (Check User Service URL)", userError);
-        
+          console.warn(
+            "Could not fetch user data immediately after login (Check User Service URL)",
+            userError
+          );
         }
 
         return typeof emailOrCredentials === "object" ? { success: true } : true;
@@ -257,8 +254,15 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Missing required fields");
       }
 
-      
-      const response = await axios.post(`${AUTH_API_URL}/register`, userData, {
+      // Chuẩn bị data cho API
+      const registerData = {
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+        confirm_password: userData.password,
+      };
+
+      const response = await axios.post(`${AUTH_API_URL}/api/auth/register/`, registerData, {
         timeout: 15000,
       });
 
@@ -319,12 +323,12 @@ export const AuthProvider = ({ children }) => {
 
         // Không tự động logout nếu chỉ là lỗi mạng, chỉ logout khi 401 thật sự
         if (error.response?.status === 401) {
-            localStorage.removeItem("access_token");
-            localStorage.removeItem("refresh_token");
-            if (mounted.current) {
-                setUser(null);
-                setError("Session expired. Please login again.");
-            }
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          if (mounted.current) {
+            setUser(null);
+            setError("Session expired. Please login again.");
+          }
         }
       } finally {
         if (mounted.current) setLoading(false);

@@ -85,28 +85,14 @@ function Dashboard() {
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
 
-  const fallbackData = useMemo(
+  // Dữ liệu rỗng khi không có data thực
+  const emptyData = useMemo(
     () => ({
-      monthlyRevenue: [
-        5000000, 7500000, 9000000, 8500000, 10000000, 11000000, 12000000, 10500000, 9800000,
-        11500000, 13000000, 14000000,
-      ],
-      weeklyRevenue: [1200000, 1500000, 1800000, 2000000, 2200000, 2500000, 2800000],
+      monthlyRevenue: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      weeklyRevenue: [0, 0, 0, 0, 0, 0, 0],
       popularItems: {
-        food: [
-          { name: "Gà rán", value: 35, sold: 24, trend: "up" },
-          { name: "Phở bò", value: 25, sold: 18, trend: "up" },
-          { name: "Bánh mì", value: 20, sold: 14, trend: "down" },
-          { name: "Cơm tấm", value: 15, sold: 10, trend: "up" },
-          { name: "Bún chả", value: 5, sold: 3, trend: "down" },
-        ],
-        drinks: [
-          { name: "Trà sữa", value: 40, sold: 28, trend: "up" },
-          { name: "Cà phê", value: 30, sold: 21, trend: "up" },
-          { name: "Nước cam", value: 15, sold: 10, trend: "down" },
-          { name: "Sinh tố", value: 10, sold: 7, trend: "up" },
-          { name: "Nước ngọt", value: 5, sold: 4, trend: "down" },
-        ],
+        food: [],
+        drinks: [],
       },
     }),
     []
@@ -129,25 +115,24 @@ function Dashboard() {
 
       const [monthlyRes, topItemsRes, billsRes, staffRes, weeklyRes] = results;
 
-      let monthlyRevenueData = fallbackData.monthlyRevenue;
+      // Sử dụng dữ liệu rỗng thay vì fallback
+      let monthlyRevenueData = emptyData.monthlyRevenue;
       if (monthlyRes.status === "fulfilled" && Array.isArray(monthlyRes.value)) {
-        const hasData = monthlyRes.value.some((val) => val > 0);
-        if (hasData) {
-          monthlyRevenueData = monthlyRes.value;
-        }
+        monthlyRevenueData = monthlyRes.value;
       }
 
-      let weeklyRevenueData = fallbackData.weeklyRevenue;
+      let weeklyRevenueData = emptyData.weeklyRevenue;
       if (weeklyRes.status === "fulfilled" && Array.isArray(weeklyRes.value)) {
         weeklyRevenueData = weeklyRes.value;
       }
 
-      let popularItems = fallbackData.popularItems;
+      let popularItems = emptyData.popularItems;
       if (topItemsRes.status === "fulfilled" && topItemsRes.value) {
         const items = topItemsRes.value;
-        if (items.food?.length > 0 || items.drinks?.length > 0) {
-          popularItems = items;
-        }
+        popularItems = {
+          food: items.food || [],
+          drinks: items.drinks || [],
+        };
       }
 
       let totalOrders = 0;
@@ -162,9 +147,17 @@ function Dashboard() {
         const totalAmount = bills.reduce((sum, bill) => sum + Number(bill.total || 0), 0);
         averageOrderValue = totalOrders > 0 ? Math.round(totalAmount / totalOrders) : 0;
 
-        // Get current month revenue
-        const currentMonth = new Date().getMonth();
-        monthlyRevenue = monthlyRevenueData[currentMonth] || 0;
+        // Get current month revenue from bills
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        monthlyRevenue = bills
+          .filter((bill) => {
+            const billDate = new Date(bill.date);
+            return billDate.getMonth() === currentMonth && billDate.getFullYear() === currentYear;
+          })
+          .reduce((sum, bill) => sum + Number(bill.total || 0), 0);
       }
 
       let totalSalaries = 0;
@@ -213,7 +206,7 @@ function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [fallbackData]);
+  }, [emptyData]);
 
   const handleRetry = useCallback(() => {
     setRetryCount((prev) => prev + 1);

@@ -667,6 +667,7 @@ function Customer() {
                     entriesPerPage={false}
                     showTotalEntries={false}
                     noEndBorder
+                    noPagination
                   />
                 </MDBox>
               )}

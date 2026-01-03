@@ -25,7 +25,7 @@ export default function data() {
       <MDTypography display="block" variant="caption" color="text" fontWeight="medium">
         {role}
       </MDTypography>
-      <MDTypography variant="caption">{Number(salary).toLocaleString('vi-VN')} đ</MDTypography>
+      <MDTypography variant="caption">{Number(salary).toLocaleString("vi-VN")} đ</MDTypography>
     </MDBox>
   );
 

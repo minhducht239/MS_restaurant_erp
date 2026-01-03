@@ -1,7 +1,7 @@
 import axios from "axios";
 import { API_BASE_URL } from "./config";
 
-const API_URL = API_BASE_URL.tables; // Reservations thuộc tables service
+const API_URL = API_BASE_URL.reservation; // Reservations service
 
 // Hàm lấy header xác thực
 const getAuthHeader = () => {
@@ -12,7 +12,7 @@ const getAuthHeader = () => {
 // Lấy danh sách đặt bàn với phân trang
 export const getReservations = async (page = 1, limit = 6) => {
   try {
-    const response = await axios.get(`${API_URL}/reservations/`, {
+    const response = await axios.get(`${API_URL}/api/reservations/`, {
       params: { page, limit },
       headers: getAuthHeader(),
     });
@@ -26,7 +26,7 @@ export const getReservations = async (page = 1, limit = 6) => {
 // Tạo đặt bàn mới
 export const createReservation = async (data) => {
   try {
-    const response = await axios.post(`${API_URL}/reservations/`, data, {
+    const response = await axios.post(`${API_URL}/api/reservations/`, data, {
       headers: getAuthHeader(),
     });
     return response.data;
@@ -39,7 +39,7 @@ export const createReservation = async (data) => {
 // Cập nhật đặt bàn
 export const updateReservation = async (id, data) => {
   try {
-    const response = await axios.put(`${API_URL}/reservations/${id}/`, data, {
+    const response = await axios.put(`${API_URL}/api/reservations/${id}/`, data, {
       headers: getAuthHeader(),
     });
     return response.data;
@@ -52,7 +52,7 @@ export const updateReservation = async (id, data) => {
 // Xóa đặt bàn
 export const deleteReservation = async (id) => {
   try {
-    await axios.delete(`${API_URL}/reservations/${id}/`, {
+    await axios.delete(`${API_URL}/api/reservations/${id}/`, {
       headers: getAuthHeader(),
     });
     return true;

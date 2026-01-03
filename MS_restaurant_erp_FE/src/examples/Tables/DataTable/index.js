@@ -32,6 +32,7 @@ function DataTable({
   pagination,
   isSorted,
   noEndBorder,
+  noPagination,
 }) {
   const defaultValue = entriesPerPage.defaultValue ? entriesPerPage.defaultValue : 10;
   const entries = entriesPerPage.entries
@@ -207,49 +208,51 @@ function DataTable({
         </TableBody>
       </Table>
 
-      <MDBox
-        display="flex"
-        flexDirection={{ xs: "column", sm: "row" }}
-        justifyContent="space-between"
-        alignItems={{ xs: "flex-start", sm: "center" }}
-        p={!showTotalEntries && pageOptions.length === 1 ? 0 : 3}
-      >
-        {showTotalEntries && (
-          <MDBox mb={{ xs: 3, sm: 0 }}>
-            <MDTypography variant="button" color="secondary" fontWeight="regular">
-              Showing {entriesStart} to {entriesEnd} of {rows.length} entries
-            </MDTypography>
-          </MDBox>
-        )}
-        {pageOptions.length > 1 && (
-          <MDPagination
-            variant={pagination.variant ? pagination.variant : "gradient"}
-            color={pagination.color ? pagination.color : "info"}
-          >
-            {canPreviousPage && (
-              <MDPagination item onClick={() => previousPage()}>
-                <Icon sx={{ fontWeight: "bold" }}>chevron_left</Icon>
-              </MDPagination>
-            )}
-            {renderPagination.length > 6 ? (
-              <MDBox width="5rem" mx={1}>
-                <MDInput
-                  inputProps={{ type: "number", min: 1, max: customizedPageOptions.length }}
-                  value={customizedPageOptions[pageIndex]}
-                  onChange={(handleInputPagination, handleInputPaginationValue)}
-                />
-              </MDBox>
-            ) : (
-              renderPagination
-            )}
-            {canNextPage && (
-              <MDPagination item onClick={() => nextPage()}>
-                <Icon sx={{ fontWeight: "bold" }}>chevron_right</Icon>
-              </MDPagination>
-            )}
-          </MDPagination>
-        )}
-      </MDBox>
+      {!noPagination && (
+        <MDBox
+          display="flex"
+          flexDirection={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          p={!showTotalEntries && pageOptions.length === 1 ? 0 : 3}
+        >
+          {showTotalEntries && (
+            <MDBox mb={{ xs: 3, sm: 0 }}>
+              <MDTypography variant="button" color="secondary" fontWeight="regular">
+                Showing {entriesStart} to {entriesEnd} of {rows.length} entries
+              </MDTypography>
+            </MDBox>
+          )}
+          {pageOptions.length > 1 && (
+            <MDPagination
+              variant={pagination.variant ? pagination.variant : "gradient"}
+              color={pagination.color ? pagination.color : "info"}
+            >
+              {canPreviousPage && (
+                <MDPagination item onClick={() => previousPage()}>
+                  <Icon sx={{ fontWeight: "bold" }}>chevron_left</Icon>
+                </MDPagination>
+              )}
+              {renderPagination.length > 6 ? (
+                <MDBox width="5rem" mx={1}>
+                  <MDInput
+                    inputProps={{ type: "number", min: 1, max: customizedPageOptions.length }}
+                    value={customizedPageOptions[pageIndex]}
+                    onChange={(handleInputPagination, handleInputPaginationValue)}
+                  />
+                </MDBox>
+              ) : (
+                renderPagination
+              )}
+              {canNextPage && (
+                <MDPagination item onClick={() => nextPage()}>
+                  <Icon sx={{ fontWeight: "bold" }}>chevron_right</Icon>
+                </MDPagination>
+              )}
+            </MDPagination>
+          )}
+        </MDBox>
+      )}
     </TableContainer>
   );
 }
@@ -262,6 +265,7 @@ DataTable.defaultProps = {
   pagination: { variant: "gradient", color: "info" },
   isSorted: true,
   noEndBorder: false,
+  noPagination: false,
 };
 
 // Typechecking props for the DataTable
@@ -291,6 +295,7 @@ DataTable.propTypes = {
   }),
   isSorted: PropTypes.bool,
   noEndBorder: PropTypes.bool,
+  noPagination: PropTypes.bool,
 };
 
 export default DataTable;

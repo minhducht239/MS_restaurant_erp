@@ -42,7 +42,7 @@ const handleApiError = (error, operation = "API operation") => {
 export const getMenuItems = async (params = {}) => {
   try {
     console.log("Fetching menu items with params:", params);
-    const response = await axios.get(`${API_URL}/menu-items/`, {
+    const response = await axios.get(`${API_URL}/api/menu/items/`, {
       params,
       headers: getAuthHeader(),
     });
@@ -57,7 +57,7 @@ export const getMenuItems = async (params = {}) => {
 export const getMenuItem = async (id) => {
   try {
     console.log(`Fetching menu item with ID: ${id}`);
-    const response = await axios.get(`${API_URL}/menu-items/${id}/`, {
+    const response = await axios.get(`${API_URL}/api/menu/items/${id}/`, {
       headers: getAuthHeader(),
     });
     console.log("Menu item fetched successfully:", response.data);
@@ -92,7 +92,7 @@ export const createMenuItem = async (itemData) => {
       console.log("JSON data:", itemData);
     }
 
-    const response = await axios.post(`${API_URL}/menu-items/`, itemData, {
+    const response = await axios.post(`${API_URL}/api/menu/items/`, itemData, {
       headers,
     });
 
@@ -130,7 +130,7 @@ export const updateMenuItem = async (id, itemData) => {
       console.log("JSON data:", itemData);
     }
 
-    const response = await axios.put(`${API_URL}/menu-items/${id}/`, itemData, {
+    const response = await axios.put(`${API_URL}/api/menu/items/${id}/`, itemData, {
       headers,
     });
 
@@ -146,7 +146,7 @@ export const updateMenuItem = async (id, itemData) => {
 export const deleteMenuItem = async (id) => {
   try {
     console.log(`Deleting menu item with ID: ${id}`);
-    await axios.delete(`${API_URL}/menu-items/${id}/`, {
+    await axios.delete(`${API_URL}/api/menu/items/${id}/`, {
       headers: getAuthHeader(),
     });
     console.log(`Menu item ${id} deleted successfully`);
@@ -163,7 +163,7 @@ export const uploadMenuImage = async (id, imageFile) => {
     const formData = new FormData();
     formData.append("image", imageFile);
 
-    const response = await axios.patch(`${API_URL}/menu-items/${id}/`, formData, {
+    const response = await axios.patch(`${API_URL}/api/menu/items/${id}/`, formData, {
       headers: {
         ...getAuthHeader(),
         "Content-Type": "multipart/form-data",
@@ -182,14 +182,14 @@ export const toggleMenuItemAvailability = async (id, isAvailable) => {
     console.log(`Toggling availability for item ${id} to: ${isAvailable}`);
 
     const response = await axios.patch(
-      `${API_URL}/menu-items/${id}/`,
+      `${API_URL}/api/menu/items/${id}/`,
       { is_available: Boolean(isAvailable) },
       {
         headers: {
           ...getAuthHeader(),
           "Content-Type": "application/json",
         },
-        params: { is_available: Boolean(isAvailable) }
+        params: { is_available: Boolean(isAvailable) },
       }
     );
 

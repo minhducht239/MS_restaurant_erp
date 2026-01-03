@@ -45,12 +45,15 @@ function AddTableDialog({ open, onClose, tableData, setTableData, onAddTable, er
             margin="normal"
             required
             error={!tableData.name && error}
-            helperText={!tableData.name && error ? "Vui lòng nhập số bàn" : ""}
+            helperText={
+              !tableData.name && error
+                ? "Vui lòng nhập số bàn"
+                : "Số bàn được đề xuất tự động, bạn có thể thay đổi"
+            }
             size="medium"
             sx={{ mb: 2 }}
             InputProps={{
               inputProps: { min: 1 },
-              readOnly: true, // Làm cho trường này chỉ đọc vì số được tự động đề xuất
             }}
           />
 
