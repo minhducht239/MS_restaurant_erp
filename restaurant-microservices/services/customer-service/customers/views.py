@@ -36,6 +36,53 @@ class CustomerViewSet(viewsets.ModelViewSet):
         limit = int(request.query_params.get('limit', 10))
         customers = Customer.objects.order_by('-loyalty_points')[:limit]
         return Response(CustomerSerializer(customers, many=True).data)
+    
+    @action(detail=True, methods=['get'])
+    def loyalty_history(self, request, pk=None):
+        """Get loyalty history (bills) for a customer"""
+        customer = self.get_object()
+        
+        # Gọi billing service để lấy bills của customer
+        try:
+            import requests
+            import os
+            
+            billing_service_url = os.environ.get(
+                'BILLING_SERVICE_URL',
+                'http://billing-service:8000'
+            )
+            
+            response = requests.get(
+                f"{billing_service_url}/api/bills/bills/",
+                params={'phone': customer.phone},
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                bills_data = response.json()
+                bills = bills_data.get('results', []) if 'results' in bills_data else bills_data
+                
+                return Response({
+                    'customer': CustomerSerializer(customer).data,
+                    'history': bills,
+                    'total_transactions': len(bills)
+                })
+            else:
+                return Response({
+                    'customer': CustomerSerializer(customer).data,
+                    'history': [],
+                    'total_transactions': 0,
+                    'error': 'Failed to fetch bills'
+                })
+                
+        except Exception as e:
+            print(f"Error fetching customer bills: {e}")
+            return Response({
+                'customer': CustomerSerializer(customer).data,
+                'history': [],
+                'total_transactions': 0,
+                'error': str(e)
+            })
 
 @api_view(['POST'])
 @permission_classes([AllowAny])  # Allow service-to-service calls
@@ -44,6 +91,11 @@ def update_from_bill(request):
     phone = request.data.get('phone')
     customer_name = request.data.get('customer_name', 'Khách hàng')
     total = Decimal(str(request.data.get('total', 0)))
+    original_total = Decimal(str(request.data.get('original_total', total)))
+    points_used = int(request.data.get('points_used', 0))  # Điểm đã dùng
+    should_earn_points = request.data.get('should_earn_points', True)  # Có cộng điểm không
+    
+    print(f"🔍 DEBUG Customer Service: phone={phone}, should_earn_points={should_earn_points}, points_used={points_used}, original_total={original_total}")
     
     if not phone:
         return Response({'error': 'Phone required'}, status=400)
@@ -56,15 +108,26 @@ def update_from_bill(request):
     if not created and customer_name:
         customer.name = customer_name
     
-    points = calculate_loyalty_points(total)
-    customer.loyalty_points += points
+    # Tính điểm mới dựa trên original_total (trước khi trừ điểm)
+    points_earned = 0
+    if should_earn_points:
+        points_earned = calculate_loyalty_points(original_total)
+    
+    print(f"🔍 DEBUG: points_earned={points_earned}, old_points={customer.loyalty_points}")
+    
+    # Cập nhật điểm: trừ điểm đã dùng, cộng điểm mới (nếu should_earn_points = True)
+    customer.loyalty_points = max(0, customer.loyalty_points - points_used + points_earned)
     customer.total_spent += total
     customer.visit_count += 1
     customer.last_visit = timezone.now().date()
     customer.save()
     
+    print(f"🔍 DEBUG: new_points={customer.loyalty_points}")
+    
     return Response({
         'success': True,
         'customer': CustomerSerializer(customer).data,
-        'points_added': points
+        'points_used': points_used,
+        'points_earned': points_earned,
+        'points_balance': customer.loyalty_points
     })

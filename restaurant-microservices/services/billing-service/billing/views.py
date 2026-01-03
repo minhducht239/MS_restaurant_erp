@@ -35,11 +35,27 @@ class BillViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         bill = serializer.save()
         
-        # Notify customer service to update loyalty points
+        # Add table info if provided
+        if self.request.data.get('table_id'):
+            bill.table_id = self.request.data.get('table_id')
+            bill.table_name = self.request.data.get('table_name', '')
+            bill.save()
+        
+        # Add loyalty points info
+        if self.request.data.get('customer_id'):
+            bill.customer_id = self.request.data.get('customer_id')
+            bill.points_used = self.request.data.get('points_used', 0)
+            bill.points_discount = self.request.data.get('points_discount', 0)
+            bill.original_total = self.request.data.get('original_total', bill.total)
+            bill.save()
+        
+        # Notify customer service to update loyalty points (subtract used points, add new points)
         if bill.phone:
-            self._update_customer_loyalty(bill)
+            should_earn_points = self.request.data.get('should_earn_points', True)
+            print(f" DEBUG: should_earn_points = {should_earn_points}, points_used = {bill.points_used}")
+            self._update_customer_loyalty(bill, should_earn_points)
     
-    def _update_customer_loyalty(self, bill):
+    def _update_customer_loyalty(self, bill, should_earn_points):
         """Call customer service to update loyalty points"""
         try:
             customer_service_url = os.environ.get(
@@ -53,7 +69,10 @@ class BillViewSet(viewsets.ModelViewSet):
                     'phone': bill.phone,
                     'customer_name': bill.customer,
                     'total': float(bill.total),
-                    'bill_id': bill.id
+                    'original_total': float(bill.original_total or bill.total),
+                    'bill_id': bill.id,
+                    'points_used': bill.points_used,
+                    'should_earn_points': should_earn_points,
                 },
                 headers={'X-Service-Key': os.environ.get('SERVICE_SECRET_KEY', 'default-service-key')},
                 timeout=5

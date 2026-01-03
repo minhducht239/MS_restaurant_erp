@@ -128,19 +128,56 @@ export const addOrderToTable = async (tableId, items) => {
   try {
     console.log(`Adding items to table ${tableId}:`, items);
 
-    const response = await axios.post(
-      `${API_URL}/api/tables/${tableId}/add_order/`,
-      { items }, // Gửi items đã được merge
-      {
+    // First, check if table has an active order, if not create one
+    let hasActiveOrder = true;
+    try {
+      // Try to add items directly
+      const response = await axios.post(
+        `${API_URL}/api/tables/${tableId}/add_item/`,
+        items, // Send items array directly
+        {
+          headers: {
+            ...getAuthHeader(),
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("Items added successfully:", response.data);
+      return response.data;
+    } catch (error) {
+      // If no active order, create one first
+      if (error.response?.data?.error === "No active order") {
+        hasActiveOrder = false;
+      } else {
+        throw error;
+      }
+    }
+
+    // Create order if needed
+    if (!hasActiveOrder) {
+      console.log("No active order, creating one first...");
+      await axios.post(
+        `${API_URL}/api/tables/${tableId}/create_order/`,
+        { notes: "" },
+        {
+          headers: {
+            ...getAuthHeader(),
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("Order created, now adding items...");
+
+      // Now add items
+      const response = await axios.post(`${API_URL}/api/tables/${tableId}/add_item/`, items, {
         headers: {
           ...getAuthHeader(),
           "Content-Type": "application/json",
         },
-      }
-    );
-
-    console.log("Items added successfully:", response.data);
-    return response.data;
+      });
+      console.log("Items added successfully:", response.data);
+      return response.data;
+    }
   } catch (error) {
     console.error(`Error adding orders to table ${tableId}:`, error);
     throw error;

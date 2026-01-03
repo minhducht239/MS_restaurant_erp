@@ -162,6 +162,50 @@ export const refreshCustomers = async (page = 1, filters = {}) => {
   return getCustomers(page, filters, true);
 };
 
+// Tìm kiếm khách hàng nhanh theo tên hoặc số điện thoại
+export const searchCustomers = async (query) => {
+  if (!query || query.trim().length < 2) {
+    return [];
+  }
+
+  try {
+    const response = await axios.get(`${API_URL}/api/customers/`, {
+      params: {
+        search: query.trim(),
+        limit: 10,
+      },
+      headers: getAuthHeader(),
+    });
+
+    return response.data?.results || [];
+  } catch (error) {
+    console.error("Error searching customers:", error);
+    return [];
+  }
+};
+
+// Tìm khách hàng theo số điện thoại chính xác
+export const getCustomerByPhone = async (phone) => {
+  if (!phone || phone.trim().length < 9) {
+    return null;
+  }
+
+  try {
+    const response = await axios.get(`${API_URL}/api/customers/`, {
+      params: {
+        phone: phone.trim(),
+      },
+      headers: getAuthHeader(),
+    });
+
+    const results = response.data?.results || [];
+    return results.find((c) => c.phone === phone.trim()) || null;
+  } catch (error) {
+    console.error("Error finding customer by phone:", error);
+    return null;
+  }
+};
+
 export const markCustomerDataForRefresh = () => {
   console.log("Marking customer data for refresh");
   window.customerDataNeedRefresh = true;

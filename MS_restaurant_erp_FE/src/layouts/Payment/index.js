@@ -1,6 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Grid, Card, Alert, Snackbar, CircularProgress } from "@mui/material";
+import {
+  Grid,
+  Card,
+  Alert,
+  Snackbar,
+  CircularProgress,
+  Autocomplete,
+  TextField,
+  Checkbox,
+  FormControlLabel,
+  Chip,
+  Box,
+  Slider,
+  Typography,
+} from "@mui/material";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
@@ -12,6 +26,7 @@ import { createBill } from "services/BillingService";
 import { getMenuItems } from "services/MenuService";
 import { useLocation } from "react-router-dom";
 import { getTableOrders } from "services/TableService";
+import { searchCustomers, getCustomerByPhone } from "services/CustomerService";
 
 function Payment() {
   const navigate = useNavigate();
@@ -27,6 +42,16 @@ function Payment() {
     date: new Date().toISOString().split("T")[0],
     items: [],
   });
+
+  // Customer search states
+  const [customerSearchResults, setCustomerSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+
+  // Loyalty points states
+  const [usePoints, setUsePoints] = useState(false);
+  const [pointsToUse, setPointsToUse] = useState(0);
+  const POINTS_TO_VND_RATE = 1000; // 1 điểm = 1000 VND
 
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -60,7 +85,92 @@ function Payment() {
 
   const handleChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
+
+    // Reset customer selection khi user nhập thủ công
+    if ((field === "customer" || field === "phone") && selectedCustomer) {
+      // Chỉ reset nếu giá trị khác với customer đã chọn
+      if (field === "customer" && value !== selectedCustomer.name) {
+        setSelectedCustomer(null);
+        setUsePoints(false);
+        setPointsToUse(0);
+      }
+      if (field === "phone" && value !== selectedCustomer.phone) {
+        setSelectedCustomer(null);
+        setUsePoints(false);
+        setPointsToUse(0);
+      }
+    }
   };
+
+  // Search customers by name or phone
+  const handleCustomerSearch = useCallback(async (query) => {
+    if (!query || query.length < 2) {
+      setCustomerSearchResults([]);
+      return;
+    }
+
+    setSearchLoading(true);
+    try {
+      const results = await searchCustomers(query);
+      setCustomerSearchResults(results);
+    } catch (error) {
+      console.error("Error searching customers:", error);
+    } finally {
+      setSearchLoading(false);
+    }
+  }, []);
+
+  // Handle customer selection from search
+  const handleSelectCustomer = (customer) => {
+    if (customer) {
+      setSelectedCustomer(customer);
+      setFormData({
+        ...formData,
+        customer: customer.name,
+        phone: customer.phone,
+      });
+      setCustomerSearchResults([]);
+      setUsePoints(false);
+      setPointsToUse(0);
+    }
+  };
+
+  // Handle use points toggle
+  const handleUsePointsChange = (event) => {
+    setUsePoints(event.target.checked);
+    if (event.target.checked) {
+      setPointsToUse(maxPointsCanUse);
+    } else {
+      setPointsToUse(0);
+    }
+  };
+
+  // Hàm trích xuất giá trị số từ price
+  const extractPriceValue = (priceInput) => {
+    if (typeof priceInput === "number") {
+      return priceInput;
+    }
+    const priceString = priceInput.toString();
+    const numericPart = priceString.replace(/[^\d.,]/g, "");
+    const withoutCommas = numericPart.replace(/,/g, "");
+    const price = parseFloat(withoutCommas);
+    return isNaN(price) ? 0 : price;
+  };
+
+  // Tính tổng tiền (moved up to be available for points calculation)
+  const totalAmount = formData.items.reduce(
+    (total, item) => total + item.quantity * extractPriceValue(item.price),
+    0
+  );
+
+  // Calculate max points that can be used (cannot exceed total amount)
+  const maxPointsCanUse = selectedCustomer
+    ? Math.min(selectedCustomer.loyalty_points || 0, Math.floor(totalAmount / POINTS_TO_VND_RATE))
+    : 0;
+
+  // Calculate discount from points
+  const pointsDiscount = pointsToUse * POINTS_TO_VND_RATE;
+  const finalAmount = Math.max(0, totalAmount - pointsDiscount);
 
   const handleAddItem = (item) => {
     // Kiểm tra nếu món đã tồn tại trong danh sách
@@ -118,6 +228,11 @@ function Payment() {
           date: formData.date,
           table_id: tableId,
           table_name: tableName,
+          // Thông tin điểm thưởng
+          customer_id: selectedCustomer?.id || null,
+          points_used: usePoints ? pointsToUse : 0,
+          points_discount: usePoints ? pointsDiscount : 0,
+          should_earn_points: !usePoints || pointsToUse === 0,
         };
 
         console.log("Creating bill from table with data:", billData);
@@ -127,13 +242,19 @@ function Payment() {
           customer: formData.customer.trim(),
           phone: formData.phone.trim(),
           date: formData.date,
-          total: totalAmount,
+          total: finalAmount,
+          original_total: totalAmount,
           items: formData.items.map((item) => ({
             menu_item_id: item.id,
             quantity: item.quantity,
             price: extractPriceValue(item.price),
             item_name: item.name,
           })),
+          // Thông tin điểm thưởng
+          customer_id: selectedCustomer?.id || null,
+          points_used: usePoints ? pointsToUse : 0,
+          points_discount: usePoints ? pointsDiscount : 0,
+          should_earn_points: !usePoints || pointsToUse === 0,
         };
 
         console.log("Creating regular bill with data:", billData);
@@ -165,7 +286,7 @@ function Payment() {
 
       // Hiển thị alert với thông tin chi tiết
       alert(`${successMessage}
-            Mã hóa đơn: ${response.bill_id || "N/A"}
+            Mã hóa đơn: ${response.id || "N/A"}
             ${
               response.total_amount
                 ? `Tổng tiền: ${response.total_amount.toLocaleString("vi-VN")} đ`
@@ -239,23 +360,6 @@ function Payment() {
   const foodItems = menuItems.filter((item) => item.category === "food");
   const drinkItems = menuItems.filter((item) => item.category === "drink");
 
-  // Tính tổng tiền
-  const extractPriceValue = (priceInput) => {
-    if (typeof priceInput === "number") {
-      return priceInput;
-    }
-    const priceString = priceInput.toString();
-    const numericPart = priceString.replace(/[^\d.,]/g, "");
-    const withoutCommas = numericPart.replace(/,/g, "");
-    const price = parseFloat(withoutCommas);
-    return isNaN(price) ? 0 : price;
-  };
-
-  const totalAmount = formData.items.reduce(
-    (total, item) => total + item.quantity * extractPriceValue(item.price),
-    0
-  );
-
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -306,6 +410,88 @@ function Payment() {
                 )}
 
                 <MDBox mt={3}>
+                  {/* Customer Search Section */}
+                  <MDBox mb={3} p={2} sx={{ backgroundColor: "#f5f5f5", borderRadius: 2 }}>
+                    <MDTypography variant="subtitle2" fontWeight="medium" mb={2}>
+                      🔍 Tìm kiếm khách hàng có sẵn
+                    </MDTypography>
+                    <Autocomplete
+                      freeSolo
+                      options={customerSearchResults}
+                      getOptionLabel={(option) =>
+                        typeof option === "string"
+                          ? option
+                          : `${option.name} - ${option.phone} (${option.loyalty_points || 0} điểm)`
+                      }
+                      loading={searchLoading}
+                      onInputChange={(event, value) => handleCustomerSearch(value)}
+                      onChange={(event, value) => {
+                        if (value && typeof value !== "string") {
+                          handleSelectCustomer(value);
+                        }
+                      }}
+                      renderOption={(props, option) => (
+                        <Box component="li" {...props}>
+                          <Box>
+                            <Typography variant="body1" fontWeight="medium">
+                              {option.name}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              📞 {option.phone} | 🎁{" "}
+                              <Chip
+                                label={`${option.loyalty_points || 0} điểm`}
+                                size="small"
+                                color={option.loyalty_points > 0 ? "success" : "default"}
+                              />
+                            </Typography>
+                          </Box>
+                        </Box>
+                      )}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Nhập tên hoặc SĐT để tìm kiếm"
+                          variant="outlined"
+                          size="small"
+                          InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                              <>
+                                {searchLoading ? (
+                                  <CircularProgress color="inherit" size={20} />
+                                ) : null}
+                                {params.InputProps.endAdornment}
+                              </>
+                            ),
+                          }}
+                        />
+                      )}
+                    />
+                    {selectedCustomer && (
+                      <Alert severity="success" sx={{ mt: 2 }}>
+                        <MDTypography variant="body2">
+                          ✅ Đã chọn: <strong>{selectedCustomer.name}</strong> |{" "}
+                          {selectedCustomer.phone}
+                          <br />
+                          🎁 Điểm thưởng: <strong>
+                            {selectedCustomer.loyalty_points || 0}
+                          </strong>{" "}
+                          điểm
+                          {selectedCustomer.loyalty_points > 0 && (
+                            <span>
+                              {" "}
+                              (tương đương{" "}
+                              {(
+                                (selectedCustomer.loyalty_points || 0) * POINTS_TO_VND_RATE
+                              ).toLocaleString("vi-VN")}{" "}
+                              VNĐ)
+                            </span>
+                          )}
+                        </MDTypography>
+                      </Alert>
+                    )}
+                  </MDBox>
+
                   <MDInput
                     label="Tên khách hàng"
                     fullWidth
@@ -439,6 +625,77 @@ function Payment() {
                   <MDTypography variant="h6" fontWeight="medium">
                     Thành tiền: {totalAmount.toLocaleString("vi-VN")} VNĐ
                   </MDTypography>
+
+                  {/* Loyalty Points Section */}
+                  {selectedCustomer && selectedCustomer.loyalty_points > 0 && (
+                    <MDBox
+                      mt={2}
+                      p={2}
+                      sx={{
+                        backgroundColor: "#e8f5e9",
+                        borderRadius: 2,
+                        border: "1px solid #4caf50",
+                      }}
+                    >
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={usePoints}
+                            onChange={handleUsePointsChange}
+                            color="success"
+                          />
+                        }
+                        label={
+                          <MDTypography variant="body2" fontWeight="medium">
+                            🎁 Sử dụng điểm thưởng ({selectedCustomer.loyalty_points} điểm có sẵn)
+                          </MDTypography>
+                        }
+                      />
+
+                      {usePoints && maxPointsCanUse > 0 && (
+                        <MDBox mt={2}>
+                          <Alert severity="info">
+                            <MDTypography variant="body2">
+                              ✅ Sẽ sử dụng <strong>{pointsToUse}</strong> điểm
+                              <br />
+                              💰 Giảm giá: <strong>
+                                {pointsDiscount.toLocaleString("vi-VN")}
+                              </strong>{" "}
+                              VNĐ
+                              <br />
+                              <MDTypography variant="caption" color="text.secondary">
+                                (Quy đổi: 1 điểm = {POINTS_TO_VND_RATE.toLocaleString("vi-VN")} VNĐ)
+                              </MDTypography>
+                            </MDTypography>
+                          </Alert>
+                        </MDBox>
+                      )}
+                    </MDBox>
+                  )}
+
+                  {/* Final Amount */}
+                  {usePoints && pointsToUse > 0 && (
+                    <MDBox
+                      mt={2}
+                      p={2}
+                      sx={{
+                        backgroundColor: "#fff3e0",
+                        borderRadius: 2,
+                        border: "1px dashed #ff9800",
+                      }}
+                    >
+                      <MDTypography variant="body2">
+                        Tổng tiền gốc: {totalAmount.toLocaleString("vi-VN")} VNĐ
+                      </MDTypography>
+                      <MDTypography variant="body2" color="success">
+                        Giảm từ điểm: -{pointsDiscount.toLocaleString("vi-VN")} VNĐ ({pointsToUse}{" "}
+                        điểm)
+                      </MDTypography>
+                      <MDTypography variant="h5" fontWeight="bold" color="error" mt={1}>
+                        💰 Thanh toán: {finalAmount.toLocaleString("vi-VN")} VNĐ
+                      </MDTypography>
+                    </MDBox>
+                  )}
                 </MDBox>
 
                 <MDBox mt={3} display="flex" justifyContent="flex-end">

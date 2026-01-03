@@ -16,8 +16,9 @@ class BillSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bill
         fields = [
-            'id', 'customer', 'phone', 'date', 'total',
+            'id', 'customer', 'phone', 'date', 'total', 'original_total',
             'staff_id', 'staff_name', 'notes', 'items',
+            'customer_id', 'points_used', 'points_discount',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
@@ -25,10 +26,14 @@ class BillSerializer(serializers.ModelSerializer):
 
 class BillCreateSerializer(serializers.ModelSerializer):
     items = BillItemSerializer(many=True)
+    id = serializers.IntegerField(read_only=True)
     
     class Meta:
         model = Bill
-        fields = ['customer', 'phone', 'date', 'total', 'staff_id', 'staff_name', 'notes', 'items']
+        fields = ['id', 'customer', 'phone', 'date', 'total', 'original_total',
+                  'staff_id', 'staff_name', 'notes', 'items',
+                  'customer_id', 'points_used', 'points_discount']
+        read_only_fields = ['id']
     
     def create(self, validated_data):
         items_data = validated_data.pop('items', [])
@@ -38,6 +43,10 @@ class BillCreateSerializer(serializers.ModelSerializer):
             BillItem.objects.create(bill=bill, **item_data)
         
         return bill
+    
+    def to_representation(self, instance):
+        """Return full bill data including id after creation"""
+        return BillSerializer(instance).data
 
 
 class BillDetailSerializer(BillSerializer):

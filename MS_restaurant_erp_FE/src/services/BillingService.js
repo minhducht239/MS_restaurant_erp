@@ -75,11 +75,17 @@ export const createBill = async (billData) => {
     if (billData.table_id) {
       console.log("Creating bill from table:", billData.table_id);
 
-      // Bước 1: Tạo bill từ table trước
+      // Tạo bill từ table với customer info và loyalty points
       const tableBillResponse = await axios.post(
-        `${API_BASE_URL.tables}/tables/${billData.table_id}/create_bill/`,
+        `${API_BASE_URL.tables}/api/tables/${billData.table_id}/create_bill/`,
         {
           date: billData.date || new Date().toISOString().split("T")[0],
+          customer: billData.customer?.trim() || "",
+          phone: billData.phone?.trim() || "",
+          // Loyalty points info
+          customer_id: billData.customer_id || null,
+          points_used: billData.points_used || 0,
+          points_discount: billData.points_discount || 0,
         },
         {
           headers: {
@@ -91,46 +97,12 @@ export const createBill = async (billData) => {
 
       console.log("Table bill created:", tableBillResponse.data);
 
-      // Bước 2: Cập nhật thông tin khách hàng ngay lập tức
-      if (tableBillResponse.data.bill_id && (billData.customer || billData.phone)) {
-        console.log("Updating customer info for bill:", tableBillResponse.data.bill_id);
-
-        try {
-          const updateResponse = await axios.patch(
-            `${API_URL}/api/billing/bills/${tableBillResponse.data.bill_id}/`,
-            {
-              customer: billData.customer?.trim() || "",
-              phone: billData.phone?.trim() || "",
-            },
-            {
-              headers: {
-                ...getAuthHeader(),
-                "Content-Type": "application/json",
-              },
-            }
-          );
-
-          console.log("Customer info updated successfully:", updateResponse.data);
-
-          // Trả về response đã được cập nhật
-          return {
-            ...tableBillResponse.data,
-            customer: updateResponse.data.customer,
-            phone: updateResponse.data.phone,
-            updated_customer: true,
-          };
-        } catch (updateError) {
-          console.warn("Could not update customer info:", updateError);
-          // Vẫn trả về bill đã tạo thành công
-          return {
-            ...tableBillResponse.data,
-            updated_customer: false,
-            update_error: updateError.message,
-          };
-        }
-      }
-
-      return tableBillResponse.data;
+      // Return bill data directly (customer info already included)
+      return {
+        ...tableBillResponse.data,
+        customer: tableBillResponse.data.bill?.customer || billData.customer,
+        phone: tableBillResponse.data.bill?.phone || billData.phone,
+      };
     } else {
       // Tạo hóa đơn thường
       console.log("Creating regular bill");

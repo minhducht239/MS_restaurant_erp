@@ -954,104 +954,135 @@ function Customer() {
                   {/* Table Body */}
                   <MDBox sx={{ maxHeight: "300px", overflowY: "auto" }}>
                     {loyaltyHistory && loyaltyHistory.length > 0 ? (
-                      loyaltyHistory.map((item, index) => (
-                        <MDBox
-                          key={item.bill_id || index}
-                          sx={{
-                            p: 2,
-                            borderBottom: index < loyaltyHistory.length - 1 ? "1px solid" : "none",
-                            borderColor: "divider",
-                            "&:hover": {
-                              backgroundColor: darkMode ? "grey.800" : "grey.50",
-                            },
-                          }}
-                        >
-                          <Grid container spacing={1} alignItems="center">
-                            {/* Mã HĐ */}
-                            <Grid item xs={2}>
-                              <MDBox
-                                sx={{
-                                  backgroundColor: "info.main",
-                                  color: "white",
-                                  px: 1.5,
-                                  py: 0.5,
-                                  borderRadius: "8px",
-                                  display: "inline-block",
-                                }}
-                              >
-                                <MDTypography variant="caption" fontWeight="bold">
-                                  #{item.bill_id || "N/A"}
-                                </MDTypography>
-                              </MDBox>
-                            </Grid>
+                      loyaltyHistory.map((item, index) => {
+                        // Tính số điểm đã cộng: nếu không dùng điểm (points_used = 0) thì cộng điểm
+                        // Điểm = original_total / 10000 (1 điểm per 10,000 VNĐ chi tiêu)
+                        const originalTotal = Number(item.original_total || item.total || 0);
+                        const pointsUsed = Number(item.points_used || 0);
+                        // Nếu có dùng điểm thì không được cộng điểm
+                        const pointsEarned = pointsUsed > 0 ? 0 : Math.floor(originalTotal / 10000);
+                        const billTotal = Number(item.total || 0);
 
-                            {/* Ngày giao dịch */}
-                            <Grid item xs={3}>
-                              <MDBox>
-                                <MDTypography variant="body2">
-                                  {item.date
-                                    ? new Date(item.date).toLocaleDateString("vi-VN", {
-                                        day: "2-digit",
-                                        month: "2-digit",
-                                        year: "numeric",
-                                      })
-                                    : "N/A"}
-                                </MDTypography>
-                              </MDBox>
-                            </Grid>
+                        return (
+                          <MDBox
+                            key={item.id || index}
+                            sx={{
+                              p: 2,
+                              borderBottom:
+                                index < loyaltyHistory.length - 1 ? "1px solid" : "none",
+                              borderColor: "divider",
+                              "&:hover": {
+                                backgroundColor: darkMode ? "grey.800" : "grey.50",
+                              },
+                            }}
+                          >
+                            <Grid container spacing={1} alignItems="center">
+                              {/* Mã HĐ */}
+                              <Grid item xs={2}>
+                                <MDBox
+                                  sx={{
+                                    backgroundColor: "info.main",
+                                    color: "white",
+                                    px: 1.5,
+                                    py: 0.5,
+                                    borderRadius: "8px",
+                                    display: "inline-block",
+                                  }}
+                                >
+                                  <MDTypography variant="caption" fontWeight="bold">
+                                    #{item.id || "N/A"}
+                                  </MDTypography>
+                                </MDBox>
+                              </Grid>
 
-                            {/* Số tiền */}
-                            <Grid item xs={3}>
-                              <MDBox>
-                                <MDTypography variant="h6" fontWeight="bold" color="warning.main">
-                                  {Number(item.amount || 0).toLocaleString("vi-VN")}
-                                </MDTypography>
-                                <MDTypography variant="caption" color="text">
-                                  VNĐ
-                                </MDTypography>
-                              </MDBox>
-                            </Grid>
+                              {/* Ngày giao dịch */}
+                              <Grid item xs={3}>
+                                <MDBox>
+                                  <MDTypography variant="body2">
+                                    {item.date
+                                      ? new Date(item.date).toLocaleDateString("vi-VN", {
+                                          day: "2-digit",
+                                          month: "2-digit",
+                                          year: "numeric",
+                                        })
+                                      : "N/A"}
+                                  </MDTypography>
+                                </MDBox>
+                              </Grid>
 
-                            {/* Điểm + */}
-                            <Grid item xs={2}>
-                              <MDBox
-                                sx={{
-                                  backgroundColor: "success.main",
-                                  color: "white",
-                                  borderRadius: "50%",
-                                  width: 40,
-                                  height: 40,
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <MDTypography variant="caption" fontWeight="bold">
-                                  +{item.points_earned || 0}
-                                </MDTypography>
-                              </MDBox>
-                            </Grid>
+                              {/* Số tiền */}
+                              <Grid item xs={3}>
+                                <MDBox>
+                                  <MDTypography variant="h6" fontWeight="bold" color="warning.main">
+                                    {billTotal.toLocaleString("vi-VN")}
+                                  </MDTypography>
+                                  <MDTypography variant="caption" color="text">
+                                    VNĐ
+                                    {pointsUsed > 0 && ` (gốc: ${originalTotal.toLocaleString()})`}
+                                  </MDTypography>
+                                </MDBox>
+                              </Grid>
 
-                            {/* Trạng thái */}
-                            <Grid item xs={2}>
-                              <MDBox
-                                sx={{
-                                  backgroundColor: "success.light",
-                                  color: "success.dark",
-                                  px: 1,
-                                  py: 0.5,
-                                  borderRadius: "16px",
-                                  display: "inline-block",
-                                }}
-                              >
-                                <MDTypography variant="caption" fontWeight="medium">
-                                  Hoàn thành
-                                </MDTypography>
-                              </MDBox>
+                              {/* Điểm +/- */}
+                              <Grid item xs={2}>
+                                {pointsUsed > 0 ? (
+                                  <MDBox
+                                    sx={{
+                                      backgroundColor: "error.main",
+                                      color: "white",
+                                      borderRadius: "50%",
+                                      width: 40,
+                                      height: 40,
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <MDTypography variant="caption" fontWeight="bold">
+                                      -{pointsUsed}
+                                    </MDTypography>
+                                  </MDBox>
+                                ) : (
+                                  <MDBox
+                                    sx={{
+                                      backgroundColor: "success.main",
+                                      color: "white",
+                                      borderRadius: "50%",
+                                      width: 40,
+                                      height: 40,
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <MDTypography variant="caption" fontWeight="bold">
+                                      +{pointsEarned}
+                                    </MDTypography>
+                                  </MDBox>
+                                )}
+                              </Grid>
+
+                              {/* Trạng thái */}
+                              <Grid item xs={2}>
+                                <MDBox
+                                  sx={{
+                                    backgroundColor: "success.light",
+                                    color: "success.dark",
+                                    px: 1,
+                                    py: 0.5,
+                                    borderRadius: "16px",
+                                    display: "inline-block",
+                                  }}
+                                >
+                                  <MDTypography variant="caption" fontWeight="medium">
+                                    Hoàn thành
+                                  </MDTypography>
+                                </MDBox>
+                              </Grid>
                             </Grid>
-                          </Grid>
-                        </MDBox>
-                      ))
+                          </MDBox>
+                        );
+                      })
                     ) : (
                       <MDBox p={4} textAlign="center">
                         <Icon sx={{ fontSize: "3rem", color: "text.secondary", mb: 2 }}>
@@ -1089,7 +1120,7 @@ function Customer() {
                           color="info.main"
                           textAlign="right"
                         >
-                          Tỷ lệ: 1 điểm = 100,000 VNĐ
+                          Tích điểm: 1 điểm / 10,000 VNĐ
                         </MDTypography>
                       </Grid>
                     </Grid>
