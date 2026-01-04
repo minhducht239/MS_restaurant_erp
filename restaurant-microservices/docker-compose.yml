@@ -11,13 +11,36 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-MinhDucA123@}
       MYSQL_DATABASE: restaurant_erp
+      # Performance optimization
+      MYSQL_INIT_CONNECT: 'SET collation_connection = utf8mb4_unicode_ci'
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
     ports:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./mysql.cnf:/etc/mysql/conf.d/custom.cnf:ro
       # - ./init-db:/docker-entrypoint-initdb.d
     networks:
       - restaurant-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=512M
+      --innodb-log-file-size=128M
+      --max-connections=200
+      --query-cache-type=1
+      --query-cache-size=64M
+      --slow-query-log=1
+      --long-query-time=2
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
@@ -31,8 +54,18 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
     networks:
       - restaurant-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+    command: redis-server /usr/local/etc/redis/redis.conf
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s

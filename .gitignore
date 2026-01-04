@@ -5,3 +5,4 @@ __pycache__/
 old_backend/
 restaurant-erp-backend/
 test_local.py
+PERFORMANCE_ANALYSIS.md

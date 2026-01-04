@@ -30,6 +30,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
+    'django_redis',  # Redis cache
+    'drf_spectacular',  # API documentation
     
     # Local apps
     'authentication',
@@ -65,7 +67,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'auth_service.wsgi.application'
 
-# Database
+# Database with connection pooling
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -77,9 +79,41 @@ DATABASES = {
         'OPTIONS': {
             'charset': 'utf8mb4',
             'use_unicode': True,
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'autocommit': True,
         },
+        'CONN_MAX_AGE': 3600,  # Connection pooling
     }
 }
+
+# Redis Cache Configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.environ.get('REDIS_URL', 'redis://localhost:6379/0'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CONNECTION_POOL_KWARGS': {
+                'max_connections': 50,
+                'retry_on_timeout': True,
+            },
+            'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
+        },
+        'TIMEOUT': 300,  # 5 minutes default timeout
+    },
+    'sessions': {
+        'BACKEND': 'django_redis.cache.RedisCache', 
+        'LOCATION': os.environ.get('REDIS_URL', 'redis://localhost:6379/1'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+        'TIMEOUT': 86400,  # 24 hours for sessions
+    }
+}
+
+# Use Redis for sessions
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'sessions'
 
 # Custom User Model
 AUTH_USER_MODEL = 'authentication.User'
@@ -102,6 +136,18 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour'
+    },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ] + (['rest_framework.renderers.BrowsableAPIRenderer'] if DEBUG else []),
 }
 
 # JWT Settings - Auth service creates tokens

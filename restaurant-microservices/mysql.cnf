@@ -1,0 +1,59 @@
+[mysql]
+default-character-set = utf8mb4
+
+[client]
+default-character-set = utf8mb4
+
+[mysqld]
+# Character set
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+
+# Performance tuning for microservices
+max_connections = 200
+max_user_connections = 180
+
+# InnoDB settings for better performance
+innodb_buffer_pool_size = 512M
+innodb_log_file_size = 128M
+innodb_log_buffer_size = 64M
+innodb_flush_log_at_trx_commit = 2
+innodb_file_per_table = 1
+innodb_flush_method = O_DIRECT
+
+# Query cache
+query_cache_type = 1
+query_cache_size = 64M
+query_cache_limit = 8M
+
+# Temporary tables
+tmp_table_size = 64M
+max_heap_table_size = 64M
+
+# Connection timeout
+wait_timeout = 600
+interactive_timeout = 600
+
+# Binary logging for replication (optional)
+log-bin = mysql-bin
+binlog_format = mixed
+expire_logs_days = 7
+max_binlog_size = 100M
+
+# Slow query logging for optimization
+slow_query_log = 1
+slow_query_log_file = /var/log/mysql/slow.log
+long_query_time = 2
+log_queries_not_using_indexes = 1
+
+# Thread cache
+thread_cache_size = 50
+thread_stack = 256K
+
+# Table cache
+table_open_cache = 2000
+table_definition_cache = 1000
+
+# Security
+local_infile = 0
+skip-symbolic-links
