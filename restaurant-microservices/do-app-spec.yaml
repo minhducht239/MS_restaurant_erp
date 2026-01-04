@@ -1,0 +1,227 @@
+name: restaurant-erp
+region: sgp
+
+# Database - MySQL
+databases:
+  - engine: MYSQL
+    name: restaurant-db
+    num_nodes: 1
+    size: db-s-1vcpu-1gb
+    version: "8"
+
+# Backend Services
+services:
+  # Auth Service
+  - name: auth-service
+    dockerfile_path: restaurant-microservices/services/auth-service/Dockerfile
+    source_dir: restaurant-microservices/services/auth-service
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api/auth
+    envs:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        type: SECRET
+        value: "your-secret-key-here"
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${restaurant-db.DATABASE_URL}
+      - key: ALLOWED_HOSTS
+        value: "*"
+
+  # Billing Service
+  - name: billing-service
+    dockerfile_path: restaurant-microservices/services/billing-service/Dockerfile
+    source_dir: restaurant-microservices/services/billing-service
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api/billing
+    envs:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        type: SECRET
+        value: "your-secret-key-here"
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${restaurant-db.DATABASE_URL}
+      - key: ALLOWED_HOSTS
+        value: "*"
+
+  # Customer Service
+  - name: customer-service
+    dockerfile_path: restaurant-microservices/services/customer-service/Dockerfile
+    source_dir: restaurant-microservices/services/customer-service
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api/customers
+    envs:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        type: SECRET
+        value: "your-secret-key-here"
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${restaurant-db.DATABASE_URL}
+      - key: ALLOWED_HOSTS
+        value: "*"
+
+  # Menu Service
+  - name: menu-service
+    dockerfile_path: restaurant-microservices/services/menu-service/Dockerfile
+    source_dir: restaurant-microservices/services/menu-service
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api/menu
+    envs:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        type: SECRET
+        value: "your-secret-key-here"
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${restaurant-db.DATABASE_URL}
+      - key: ALLOWED_HOSTS
+        value: "*"
+
+  # Reservation Service
+  - name: reservation-service
+    dockerfile_path: restaurant-microservices/services/reservation-service/Dockerfile
+    source_dir: restaurant-microservices/services/reservation-service
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api/reservations
+    envs:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        type: SECRET
+        value: "your-secret-key-here"
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${restaurant-db.DATABASE_URL}
+      - key: ALLOWED_HOSTS
+        value: "*"
+
+  # Staff Service
+  - name: staff-service
+    dockerfile_path: restaurant-microservices/services/staff-service/Dockerfile
+    source_dir: restaurant-microservices/services/staff-service
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api/staff
+    envs:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        type: SECRET
+        value: "your-secret-key-here"
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${restaurant-db.DATABASE_URL}
+      - key: ALLOWED_HOSTS
+        value: "*"
+
+  # Table Service
+  - name: table-service
+    dockerfile_path: restaurant-microservices/services/table-service/Dockerfile
+    source_dir: restaurant-microservices/services/table-service
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api/tables
+    envs:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        type: SECRET
+        value: "your-secret-key-here"
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${restaurant-db.DATABASE_URL}
+      - key: ALLOWED_HOSTS
+        value: "*"
+
+  # Dashboard Service
+  - name: dashboard-service
+    dockerfile_path: restaurant-microservices/services/dashboard-service/Dockerfile
+    source_dir: restaurant-microservices/services/dashboard-service
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api/dashboard
+    envs:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        type: SECRET
+        value: "your-secret-key-here"
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${restaurant-db.DATABASE_URL}
+      - key: ALLOWED_HOSTS
+        value: "*"
+
+# Frontend - Static Site
+static_sites:
+  - name: frontend
+    build_command: npm run build
+    environment_slug: node-js
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    source_dir: MS_restaurant_erp_FE
+    output_dir: build
+    envs:
+      - key: REACT_APP_API_URL
+        value: ${APP_URL}
