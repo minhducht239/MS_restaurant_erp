@@ -1,0 +1,65 @@
+# Environment variables cho DigitalOcean App Platform Deployment
+
+# ===========================================
+# FRONTEND ENVIRONMENT VARIABLES (React)  
+# ===========================================
+# Thay thế các URL này với domain thực của các service sau khi deploy
+
+# Auth Service
+REACT_APP_AUTH_API_URL=https://auth-service-xxxxx.ondigitalocean.app
+
+# Menu Service  
+REACT_APP_MENU_API_URL=https://menu-service-xxxxx.ondigitalocean.app
+
+# Billing Service
+REACT_APP_BILLING_API_URL=https://billing-service-xxxxx.ondigitalocean.app
+
+# Customer Service
+REACT_APP_CUSTOMER_API_URL=https://customer-service-xxxxx.ondigitalocean.app
+
+# Tables Service
+REACT_APP_TABLES_API_URL=https://table-service-xxxxx.ondigitalocean.app
+
+# Staff Service
+REACT_APP_STAFF_API_URL=https://staff-service-xxxxx.ondigitalocean.app
+
+# Reservation Service
+REACT_APP_RESERVATION_API_URL=https://reservation-service-xxxxx.ondigitalocean.app
+
+# Dashboard Service
+REACT_APP_DASHBOARD_API_URL=https://dashboard-service-xxxxx.ondigitalocean.app
+
+# ===========================================
+# BACKEND ENVIRONMENT VARIABLES (Django)
+# ===========================================
+
+# Database (Managed MySQL)
+DATABASE_URL=mysql://username:password@db-host:25060/database_name
+DB_HOST=your-mysql-host.db.ondigitalocean.com
+DB_PORT=25060
+DB_NAME=restaurant_erp
+DB_USER=doadmin
+DB_PASSWORD=your-secure-password
+
+# Redis (Managed Redis hoặc container)
+REDIS_URL=rediss://username:password@redis-host:25061
+
+# Security
+SECRET_KEY=your-very-secure-django-secret-key-here
+DEBUG=False
+ALLOWED_HOSTS=*.ondigitalocean.app,yourdomain.com
+
+# CORS (cho phép frontend call API)
+CORS_ALLOWED_ORIGINS=https://frontend-xxxxx.ondigitalocean.app,https://yourdomain.com
+
+# Google OAuth
+GOOGLE_OAUTH2_CLIENT_ID=your-google-client-id
+GOOGLE_OAUTH2_CLIENT_SECRET=your-google-client-secret
+GOOGLE_OAUTH2_REDIRECT_URI=https://frontend-xxxxx.ondigitalocean.app/auth/google/callback
+
+# JWT Token Settings
+JWT_ACCESS_TOKEN_LIFETIME=60
+JWT_REFRESH_TOKEN_LIFETIME=7
+
+# Frontend URL for redirects
+FRONTEND_URL=https://frontend-xxxxx.ondigitalocean.app
