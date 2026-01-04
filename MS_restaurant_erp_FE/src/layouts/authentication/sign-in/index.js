@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"; // Thêm useEffect
 
 // react-router-dom components
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 // @mui material components
 import Card from "@mui/material/Card";
@@ -10,6 +10,8 @@ import Switch from "@mui/material/Switch";
 import Grid from "@mui/material/Grid";
 import MuiLink from "@mui/material/Link";
 import Alert from "@mui/material/Alert"; // Thêm Alert component
+import Divider from "@mui/material/Divider";
+import CircularProgress from "@mui/material/CircularProgress";
 
 // @mui icons
 import GoogleIcon from "@mui/icons-material/Google";
@@ -34,11 +36,13 @@ function Basic() {
   });
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState(""); // Thay đổi từ null thành ""
   const [validationErrors, setValidationErrors] = useState({}); // Thêm validation errors state
 
   const navigate = useNavigate();
-  const { login, error: authError } = useAuth(); // Sử dụng hook để lấy login và error từ context
+  const location = useLocation();
+  const { login, error: authError, getGoogleLoginUrl, loginWithGoogle } = useAuth();
 
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
 
@@ -127,6 +131,71 @@ function Basic() {
     }
   }, []);
 
+  // Handle Google OAuth callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const code = urlParams.get("code");
+    const googleError = urlParams.get("error");
+
+    if (googleError) {
+      setError("Google login was cancelled or failed");
+      // Clear URL params
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    if (code) {
+      handleGoogleCallback(code);
+    }
+  }, [location.search]);
+
+  const handleGoogleCallback = async (code) => {
+    setGoogleLoading(true);
+    setError("");
+
+    try {
+      const result = await loginWithGoogle(code);
+
+      if (result.success) {
+        console.log("Google login successful");
+        if (result.isNewUser) {
+          // Có thể redirect đến trang hoàn thiện profile nếu cần
+          console.log("New user created from Google account");
+        }
+        navigate("/dashboard");
+      } else {
+        setError(result.error || "Google login failed");
+      }
+    } catch (err) {
+      console.error("Google callback error:", err);
+      setError("Google login failed. Please try again.");
+    } finally {
+      setGoogleLoading(false);
+      // Clear URL params
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    setError("");
+
+    try {
+      const googleUrl = await getGoogleLoginUrl();
+      if (googleUrl) {
+        // Redirect to Google OAuth
+        window.location.href = googleUrl;
+      } else {
+        setError("Could not get Google login URL. Please try again.");
+        setGoogleLoading(false);
+      }
+    } catch (err) {
+      console.error("Google login error:", err);
+      setError("Google login is not configured or unavailable.");
+      setGoogleLoading(false);
+    }
+  };
+
   return (
     <BasicLayout image={bgImage}>
       <Card>
@@ -144,98 +213,146 @@ function Basic() {
           <MDTypography variant="h4" fontWeight="medium" color="white" mt={1}>
             Sign in
           </MDTypography>
-          <Grid container spacing={3} justifyContent="center" sx={{ mt: 1, mb: 2 }}>
-            <Grid item xs={2}>
-              <MDTypography component={MuiLink} href="#" variant="body1" color="white">
-                <GoogleIcon color="inherit" />
-              </MDTypography>
-            </Grid>
-          </Grid>
         </MDBox>
         <MDBox pt={4} pb={3} px={3}>
-          <MDBox component="form" role="form" onSubmit={handleSubmit}>
-            {/* Error Display - cải tiến */}
-            {(error || authError) && (
+          {/* Google Loading Overlay */}
+          {googleLoading && (
+            <MDBox
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              py={4}
+            >
+              <CircularProgress color="info" />
+              <MDTypography variant="body2" color="text" mt={2}>
+                Đang xử lý đăng nhập Google...
+              </MDTypography>
+            </MDBox>
+          )}
+
+          {!googleLoading && (
+            <MDBox component="form" role="form" onSubmit={handleSubmit}>
+              {/* Error Display - cải tiến */}
+              {(error || authError) && (
+                <MDBox mb={2}>
+                  <Alert severity="error" sx={{ fontSize: "0.875rem" }}>
+                    {error || authError}
+                  </Alert>
+                </MDBox>
+              )}
+
               <MDBox mb={2}>
-                <Alert severity="error" sx={{ fontSize: "0.875rem" }}>
-                  {error || authError}
-                </Alert>
+                <MDInput
+                  type="text"
+                  label="Username or Email"
+                  fullWidth
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  error={!!validationErrors.username}
+                  disabled={loading}
+                  required
+                />
+                {validationErrors.username && (
+                  <MDTypography
+                    variant="caption"
+                    color="error"
+                    sx={{ fontSize: "0.75rem", mt: 0.5 }}
+                  >
+                    {validationErrors.username}
+                  </MDTypography>
+                )}
               </MDBox>
-            )}
 
-            <MDBox mb={2}>
-              <MDInput
-                type="text"
-                label="Username or Email"
-                fullWidth
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                error={!!validationErrors.username}
-                disabled={loading}
-                required
-              />
-              {validationErrors.username && (
-                <MDTypography variant="caption" color="error" sx={{ fontSize: "0.75rem", mt: 0.5 }}>
-                  {validationErrors.username}
-                </MDTypography>
-              )}
-            </MDBox>
+              <MDBox mb={2}>
+                <MDInput
+                  type="password"
+                  label="Password"
+                  fullWidth
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={!!validationErrors.password}
+                  disabled={loading}
+                  required
+                />
+                {validationErrors.password && (
+                  <MDTypography
+                    variant="caption"
+                    color="error"
+                    sx={{ fontSize: "0.75rem", mt: 0.5 }}
+                  >
+                    {validationErrors.password}
+                  </MDTypography>
+                )}
+              </MDBox>
 
-            <MDBox mb={2}>
-              <MDInput
-                type="password"
-                label="Password"
-                fullWidth
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                error={!!validationErrors.password}
-                disabled={loading}
-                required
-              />
-              {validationErrors.password && (
-                <MDTypography variant="caption" color="error" sx={{ fontSize: "0.75rem", mt: 0.5 }}>
-                  {validationErrors.password}
-                </MDTypography>
-              )}
-            </MDBox>
-
-            <MDBox display="flex" alignItems="center" ml={-1}>
-              <Switch checked={rememberMe} onChange={handleSetRememberMe} disabled={loading} />
-              <MDTypography
-                variant="button"
-                fontWeight="regular"
-                color="text"
-                onClick={handleSetRememberMe}
-                sx={{ cursor: "pointer", userSelect: "none", ml: -1 }}
-              >
-                &nbsp;&nbsp;Remember me
-              </MDTypography>
-            </MDBox>
-
-            <MDBox mt={4} mb={1}>
-              <MDButton type="submit" variant="gradient" color="info" fullWidth disabled={loading}>
-                {loading ? "Signing in..." : "Sign in"}
-              </MDButton>
-            </MDBox>
-
-            <MDBox mt={3} mb={1} textAlign="center">
-              <MDTypography variant="button" color="text">
-                Don&apos;t have an account?{" "}
+              <MDBox display="flex" alignItems="center" ml={-1}>
+                <Switch checked={rememberMe} onChange={handleSetRememberMe} disabled={loading} />
                 <MDTypography
-                  component={Link}
-                  to="/authentication/sign-up"
                   variant="button"
-                  color="info"
-                  fontWeight="medium"
-                  textGradient
+                  fontWeight="regular"
+                  color="text"
+                  onClick={handleSetRememberMe}
+                  sx={{ cursor: "pointer", userSelect: "none", ml: -1 }}
                 >
-                  Sign up
+                  &nbsp;&nbsp;Remember me
                 </MDTypography>
-              </MDTypography>
+              </MDBox>
+
+              <MDBox mt={4} mb={1}>
+                <MDButton
+                  type="submit"
+                  variant="gradient"
+                  color="info"
+                  fullWidth
+                  disabled={loading}
+                >
+                  {loading ? "Signing in..." : "Sign in"}
+                </MDButton>
+              </MDBox>
+
+              {/* Divider */}
+              <MDBox mt={3} mb={2}>
+                <Divider>
+                  <MDTypography variant="caption" color="text">
+                    hoặc
+                  </MDTypography>
+                </Divider>
+              </MDBox>
+
+              {/* Google Login Button */}
+              <MDBox mb={2}>
+                <MDButton
+                  variant="outlined"
+                  color="dark"
+                  fullWidth
+                  onClick={handleGoogleLogin}
+                  disabled={loading || googleLoading}
+                  startIcon={<GoogleIcon />}
+                >
+                  Đăng nhập với Google
+                </MDButton>
+              </MDBox>
+
+              <MDBox mt={3} mb={1} textAlign="center">
+                <MDTypography variant="button" color="text">
+                  Don&apos;t have an account?{" "}
+                  <MDTypography
+                    component={Link}
+                    to="/authentication/sign-up"
+                    variant="button"
+                    color="info"
+                    fontWeight="medium"
+                    textGradient
+                  >
+                    Sign up
+                  </MDTypography>
+                </MDTypography>
+              </MDBox>
             </MDBox>
-          </MDBox>
+          )}
         </MDBox>
       </Card>
     </BasicLayout>

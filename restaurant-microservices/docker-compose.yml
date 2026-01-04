@@ -79,6 +79,11 @@ services:
       - DB_USER=root
       - DB_PASSWORD=${MYSQL_ROOT_PASSWORD:-MinhDucA123@}
       - REDIS_URL=redis://redis:6379/0
+      # Google OAuth Settings
+      - GOOGLE_OAUTH2_CLIENT_ID=${GOOGLE_OAUTH2_CLIENT_ID:-}
+      - GOOGLE_OAUTH2_CLIENT_SECRET=${GOOGLE_OAUTH2_CLIENT_SECRET:-}
+      - GOOGLE_OAUTH2_REDIRECT_URI=${GOOGLE_OAUTH2_REDIRECT_URI:-http://localhost:3000/auth/google/callback}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
     ports:
       - "8001:8000"
     depends_on:

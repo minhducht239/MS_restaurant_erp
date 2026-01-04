@@ -752,3 +752,194 @@ def my_login_history(request):
         'success': True,
         'history': serializer.data
     })
+
+
+# ============= GOOGLE OAUTH VIEWS =============
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def google_login_url(request):
+    """Get Google OAuth login URL"""
+    from django.conf import settings
+    
+    client_id = settings.GOOGLE_OAUTH2_CLIENT_ID
+    redirect_uri = settings.GOOGLE_OAUTH2_REDIRECT_URI
+    
+    if not client_id:
+        return Response({
+            'success': False,
+            'message': 'Google OAuth not configured'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    # Google OAuth URL
+    google_auth_url = (
+        'https://accounts.google.com/o/oauth2/v2/auth'
+        f'?client_id={client_id}'
+        f'&redirect_uri={redirect_uri}'
+        '&response_type=code'
+        '&scope=openid%20email%20profile'
+        '&access_type=offline'
+        '&prompt=consent'
+    )
+    
+    return Response({
+        'success': True,
+        'url': google_auth_url
+    })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def google_callback(request):
+    """Handle Google OAuth callback - exchange code for tokens and user info"""
+    import requests as http_requests
+    from django.conf import settings
+    
+    code = request.data.get('code')
+    
+    if not code:
+        return Response({
+            'success': False,
+            'message': 'Authorization code is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Exchange code for tokens
+        token_response = http_requests.post(
+            'https://oauth2.googleapis.com/token',
+            data={
+                'code': code,
+                'client_id': settings.GOOGLE_OAUTH2_CLIENT_ID,
+                'client_secret': settings.GOOGLE_OAUTH2_CLIENT_SECRET,
+                'redirect_uri': settings.GOOGLE_OAUTH2_REDIRECT_URI,
+                'grant_type': 'authorization_code'
+            }
+        )
+        
+        if token_response.status_code != 200:
+            logger.error(f"Google token error: {token_response.text}")
+            return Response({
+                'success': False,
+                'message': 'Failed to get access token from Google'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        token_data = token_response.json()
+        access_token = token_data.get('access_token')
+        
+        # Get user info from Google
+        user_info_response = http_requests.get(
+            'https://www.googleapis.com/oauth2/v2/userinfo',
+            headers={'Authorization': f'Bearer {access_token}'}
+        )
+        
+        if user_info_response.status_code != 200:
+            logger.error(f"Google user info error: {user_info_response.text}")
+            return Response({
+                'success': False,
+                'message': 'Failed to get user info from Google'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        google_user = user_info_response.json()
+        email = google_user.get('email')
+        google_id = google_user.get('id')
+        name = google_user.get('name', '')
+        picture = google_user.get('picture', '')
+        
+        if not email:
+            return Response({
+                'success': False,
+                'message': 'Email not provided by Google'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Find or create user
+        with transaction.atomic():
+            user = User.objects.filter(email=email).first()
+            
+            if user:
+                # Update existing user's Google info
+                user.google_id = google_id
+                if picture and not user.avatar:
+                    user.avatar_url = picture
+                user.last_login = timezone.now()
+                user.save()
+                
+                is_new_user = False
+            else:
+                # Create new user from Google account
+                username = email.split('@')[0]
+                # Ensure unique username
+                base_username = username
+                counter = 1
+                while User.objects.filter(username=username).exists():
+                    username = f"{base_username}{counter}"
+                    counter += 1
+                
+                # Split name
+                name_parts = name.split(' ', 1)
+                first_name = name_parts[0] if name_parts else ''
+                last_name = name_parts[1] if len(name_parts) > 1 else ''
+                
+                user = User.objects.create(
+                    username=username,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    google_id=google_id,
+                    avatar_url=picture,
+                    is_active=True,
+                    role='staff',  # Default role
+                )
+                user.set_unusable_password()  # No password for Google users
+                user.save()
+                
+                is_new_user = True
+            
+            # Check if account is locked
+            if user.is_locked:
+                return Response({
+                    'success': False,
+                    'message': f'Account is locked. Try again after {user.locked_until.strftime("%Y-%m-%d %H:%M:%S")}'
+                }, status=status.HTTP_401_UNAUTHORIZED)
+            
+            # Check if account is active
+            if not user.is_active:
+                return Response({
+                    'success': False,
+                    'message': 'Account is disabled'
+                }, status=status.HTTP_401_UNAUTHORIZED)
+            
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            refresh['username'] = user.username
+            refresh['email'] = user.email
+            refresh['role'] = user.role
+            
+            # Log activity
+            log_user_activity(
+                user, 
+                'google_login', 
+                request, 
+                f'User logged in via Google {"(new account)" if is_new_user else ""}'
+            )
+            log_login_attempt(user, 'success', request)
+            
+            logger.info(f"Google login successful: {user.username}")
+            
+            return Response({
+                'success': True,
+                'message': 'Login successful',
+                'is_new_user': is_new_user,
+                'user': UserSerializer(user).data,
+                'tokens': {
+                    'access': str(refresh.access_token),
+                    'refresh': str(refresh)
+                }
+            })
+            
+    except Exception as e:
+        logger.error(f"Google login error: {str(e)}")
+        return Response({
+            'success': False,
+            'message': 'Google login failed',
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -19,6 +19,10 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('validate/', views.validate_token, name='validate_token'),
     
+    # Google OAuth endpoints
+    path('google/login/', views.google_login_url, name='google_login_url'),
+    path('google/callback/', views.google_callback, name='google_callback'),
+    
     # Profile endpoints
     path('profile/', views.profile, name='profile'),
     path('profile/change-password/', views.change_password, name='change_password'),

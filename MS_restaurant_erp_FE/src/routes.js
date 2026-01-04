@@ -153,6 +153,14 @@ const routes = [
     component: <SignUp />,
     authRoute: true, // Đánh dấu là route xác thực
   },
+  // Google OAuth Callback - redirect to sign-in with code param
+  {
+    type: "route",
+    key: "google-callback",
+    route: "/auth/google/callback",
+    component: <SignIn />,
+    authRoute: true,
+  },
 ];
 
 export default routes;

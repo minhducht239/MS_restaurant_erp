@@ -82,11 +82,17 @@ class User(AbstractUser):
         null=True,
         help_text="User profile picture"
     )
+    avatar_url = models.URLField(max_length=500, blank=True, null=True, help_text="External avatar URL (Google)")
     date_of_birth = models.DateField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     last_login_ip = models.GenericIPAddressField(blank=True, null=True)
     failed_login_attempts = models.IntegerField(default=0)
     locked_until = models.DateTimeField(blank=True, null=True)
+    
+    # Google OAuth fields
+    google_id = models.CharField(max_length=100, blank=True, null=True, unique=True, help_text="Google OAuth ID")
+    auth_provider = models.CharField(max_length=20, default='local', help_text="Authentication provider: local, google")
+    
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -99,10 +105,12 @@ class User(AbstractUser):
         return f"{self.first_name} {self.last_name}".strip() or self.username
     
     @property
-    def avatar_url(self):
+    def get_avatar_url(self):
         """Return avatar URL or default"""
         if self.avatar and hasattr(self.avatar, 'url'):
             return self.avatar.url
+        if self.avatar_url:
+            return self.avatar_url
         return '/static/images/default-avatar.png'
     
     @property

@@ -306,6 +306,69 @@ export const AuthProvider = ({ children }) => {
     navigate("/authentication/sign-in");
   }, [navigate]);
 
+  // ============= GOOGLE OAUTH =============
+  const getGoogleLoginUrl = useCallback(async () => {
+    try {
+      const response = await axios.get(`${AUTH_API_URL}/api/auth/google/login/`, {
+        timeout: 10000,
+      });
+      return response.data.url;
+    } catch (error) {
+      console.error("Error getting Google login URL:", error);
+      throw error;
+    }
+  }, []);
+
+  const loginWithGoogle = useCallback(
+    async (code) => {
+      try {
+        if (mounted.current) setError(null);
+
+        console.log("Processing Google login with code...");
+
+        const response = await axios.post(
+          `${AUTH_API_URL}/api/auth/google/callback/`,
+          { code },
+          { timeout: 15000 }
+        );
+
+        const data = response.data;
+        console.log("Google login response:", data);
+
+        if (!data.success) {
+          throw new Error(data.message || "Google login failed");
+        }
+
+        const accessToken = data.tokens?.access;
+        const refreshToken = data.tokens?.refresh;
+
+        if (!accessToken || !refreshToken) {
+          throw new Error("Invalid response: missing tokens");
+        }
+
+        localStorage.setItem("access_token", accessToken);
+        localStorage.setItem("refresh_token", refreshToken);
+
+        if (mounted.current) {
+          setUser(data.user);
+        }
+
+        console.log("Google login successful");
+        return { success: true, isNewUser: data.is_new_user };
+      } catch (error) {
+        console.error("Google login error:", error);
+
+        const errorMessage =
+          error.response?.data?.message || error.message || "Google login failed";
+
+        if (mounted.current) setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    },
+    [getCurrentUser]
+  );
+  // ============= END GOOGLE OAUTH =============
+
   useEffect(() => {
     const checkLoggedIn = async () => {
       try {
@@ -355,6 +418,9 @@ export const AuthProvider = ({ children }) => {
       getCurrentUser,
       updateUser,
       isAuthenticated: !!user,
+      // Google OAuth
+      getGoogleLoginUrl,
+      loginWithGoogle,
     }),
     [
       user,
@@ -367,6 +433,8 @@ export const AuthProvider = ({ children }) => {
       refreshToken,
       getCurrentUser,
       updateUser,
+      getGoogleLoginUrl,
+      loginWithGoogle,
     ]
   );
 
