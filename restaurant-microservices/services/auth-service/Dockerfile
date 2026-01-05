@@ -18,7 +18,6 @@ WORKDIR /app
 
 # Copy requirements first for better Docker layer caching
 COPY requirements.txt .
-COPY ../shared/requirements-base.txt ./shared/
 
 # Install Python dependencies including gunicorn
 RUN pip install --no-cache-dir --upgrade pip && \
