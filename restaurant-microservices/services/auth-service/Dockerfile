@@ -1,22 +1,3 @@
-# Multi-stage build for smaller image
-FROM python:3.11-slim as builder
-
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Install system dependencies for building
-RUN apt-get update && apt-get install -y \
-    default-libmysqlclient-dev \
-    build-essential \
-    pkg-config \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
-
-# Production stage
 FROM python:3.11-slim
 
 # Set environment variables
@@ -24,41 +5,51 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
-# Install runtime dependencies only
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     default-libmysqlclient-dev \
+    gcc \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
 # Set work directory
 WORKDIR /app
 
-# Copy Python packages from builder stage
-COPY --from=builder /root/.local /root/.local
+# Copy requirements first for better Docker layer caching
+COPY requirements.txt .
+COPY ../shared/requirements-base.txt ./shared/
 
-# Copy project files
+# Install Python dependencies including gunicorn
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir gunicorn gevent && \
+    pip list | grep gunicorn
+
+# Copy application code
 COPY . .
 
-# Create media directory
-RUN mkdir -p /app/media/avatars
+# Install Python packages with proper permissions and ensure PATH
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir gunicorn gevent && \
+    which gunicorn && \
+    gunicorn --version
 
-# Collect static files
-RUN python manage.py collectstatic --noinput || true
+# Create non-root user for security but keep executables accessible
+RUN adduser --disabled-password --gecos '' appuser && \
+    chown -R appuser:appuser /app && \
+    chmod +x /usr/local/bin/gunicorn
+
+# Add user bin to PATH
+ENV PATH="/home/appuser/.local/bin:${PATH}"
+USER appuser
+
+# Health check - remove curl dependency
+HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
+  CMD python -c "import requests; requests.get('http://localhost:8000/health/', timeout=5)" || exit 1
 
 # Expose port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/health/', timeout=5)" || exit 1
-
-# Optimized gunicorn command for performance
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", \
-     "--workers", "3", \
-     "--worker-class", "gevent", \
-     "--worker-connections", "1000", \
-     "--max-requests", "1000", \
-     "--max-requests-jitter", "100", \
-     "--preload", \
-     "--timeout", "30", \
-     "auth_service.wsgi:application"]
+# Use python -m gunicorn for better compatibility
+CMD ["python", "-m", "gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--worker-class", "gevent", "--worker-connections", "1000", "--max-requests", "1000", "--max-requests-jitter", "100", "--timeout", "30", "--preload", "auth_service.wsgi:application"]
