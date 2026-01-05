@@ -124,7 +124,8 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db' if os.environ.get('REDIS_
 SESSION_CACHE_ALIAS = 'sessions'
 
 # Custom User Model
-AUTH_USER_MODEL = 'authentication.User'
+# Use default Django User model since auth is handled by separate auth service
+# AUTH_USER_MODEL = 'auth.User'  # Default Django User
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -169,7 +170,8 @@ SIMPLE_JWT = {
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    'TOKEN_OBTAIN_SERIALIZER': 'authentication.serializers.CustomTokenObtainPairSerializer',
+    # Billing service only validates tokens, doesn't create them
+    # 'TOKEN_OBTAIN_SERIALIZER': 'rest_framework_simplejwt.serializers.TokenObtainPairSerializer',
 }
 
 # CORS
@@ -217,7 +219,7 @@ LOGGING = {
         'level': 'INFO',
     },
     'loggers': {
-        'authentication': {
+        'billing': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
