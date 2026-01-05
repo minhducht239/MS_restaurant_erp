@@ -6,6 +6,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 
 def health_check(request):
@@ -30,7 +31,13 @@ urlpatterns = [
     path('', api_root, name='api_root'),
     path('health/', health_check, name='health_check'),
     path('admin/', admin.site.urls),
-    # path('api/auth/', include('authentication.urls')),  # Temporarily disabled
+    
+    # API Documentation
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    
+    # Auth endpoints
+    path('api/auth/', include('authentication.urls')),
 ]
 
 if settings.DEBUG:
