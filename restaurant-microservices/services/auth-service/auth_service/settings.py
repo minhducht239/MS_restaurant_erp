@@ -12,7 +12,7 @@ sys.path.insert(0, str(BASE_DIR.parent.parent / 'shared'))
 
 # Security
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-auth-service-key')
-DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'  # Enable debug temporarily
 ALLOWED_HOSTS = ['*']
 
 # Application definition
