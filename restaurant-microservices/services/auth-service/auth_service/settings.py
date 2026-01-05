@@ -90,11 +90,13 @@ DATABASES = {
     }
 }
 
-# Redis Cache Configuration
+# Cache Configuration - Using dummy cache for testing (no Redis dependency)
 CACHES = {
     'default': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    } if os.environ.get('REDIS_URL') is None else {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': os.environ.get('REDIS_URL', 'redis://localhost:6379/0'),
+        'LOCATION': os.environ.get('REDIS_URL'),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
             'CONNECTION_POOL_KWARGS': {
@@ -103,20 +105,22 @@ CACHES = {
             },
             'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
         },
-        'TIMEOUT': 300,  # 5 minutes default timeout
+        'TIMEOUT': 300,
     },
     'sessions': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    } if os.environ.get('REDIS_URL') is None else {
         'BACKEND': 'django_redis.cache.RedisCache', 
-        'LOCATION': os.environ.get('REDIS_URL', 'redis://localhost:6379/1'),
+        'LOCATION': os.environ.get('REDIS_URL'),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         },
-        'TIMEOUT': 86400,  # 24 hours for sessions
+        'TIMEOUT': 86400,
     }
 }
 
-# Use Redis for sessions
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+# Session Configuration - Use database instead of Redis for testing
+SESSION_ENGINE = 'django.contrib.sessions.backends.db' if os.environ.get('REDIS_URL') is None else 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'sessions'
 
 # Custom User Model
@@ -140,7 +144,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
-    'DEFAULT_THROTTLE_CLASSES': [
+    'DEFAULT_THROTTLE_CLASSES': [] if os.environ.get('REDIS_URL') is None else [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle'
     ],
