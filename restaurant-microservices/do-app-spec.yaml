@@ -1,13 +1,12 @@
 name: restaurant-erp
 region: sgp
 
-# Database - MySQL
-databases:
-  - engine: MYSQL
-    name: restaurant-db
-    num_nodes: 1
-    size: db-s-1vcpu-1gb
-    version: "8"
+# NOTE: Using existing DigitalOcean Managed Database
+# Database info:
+# Host: restaurant-erp-do-user-28536171-0.e.db.ondigitalocean.com
+# Port: 25060
+# Database: defaultdb
+# User: doadmin
 
 # Backend Services
 services:

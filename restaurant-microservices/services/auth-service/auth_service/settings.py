@@ -71,7 +71,7 @@ WSGI_APPLICATION = 'auth_service.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_NAME', 'restaurant_erp'),
+        'NAME': os.environ.get('DB_NAME', 'defaultdb'),
         'USER': os.environ.get('DB_USER', 'root'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'MinhDucA123@'),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
@@ -81,6 +81,10 @@ DATABASES = {
             'use_unicode': True,
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             'autocommit': True,
+            # SSL configuration for DigitalOcean managed database
+            'ssl': {
+                'ssl_disabled': False,
+            } if os.environ.get('DB_SSL', 'false').lower() == 'true' else {},
         },
         'CONN_MAX_AGE': 3600,  # Connection pooling
     }

@@ -1,0 +1,318 @@
+name: restaurant-erp
+region: sgp
+
+# Using existing DigitalOcean Managed Database:
+# Host: restaurant-erp-do-user-28536171-0.e.db.ondigitalocean.com
+# Port: 25060, Database: defaultdb, User: doadmin
+
+services:
+  # Auth Service
+  - name: auth-service
+    dockerfile_path: restaurant-microservices/services/auth-service/Dockerfile
+    source_dir: restaurant-microservices/services/auth-service
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api/auth
+    envs:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        type: SECRET
+        value: "django-production-secret-key-x7k2m9n8p5q6r7s8t9u0v1w2"
+      - key: DB_HOST
+        value: "restaurant-erp-do-user-28536171-0.e.db.ondigitalocean.com"
+      - key: DB_PORT
+        value: "25060"
+      - key: DB_NAME
+        value: "defaultdb"
+      - key: DB_USER
+        value: "doadmin"
+      - key: DB_PASSWORD
+        type: SECRET
+        value: "YOUR_ACTUAL_DB_PASSWORD_HERE"
+      - key: DB_SSL
+        value: "true"
+      - key: ALLOWED_HOSTS
+        value: "*.ondigitalocean.app"
+      - key: REDIS_URL
+        value: "redis://localhost:6379/0"
+
+  # Menu Service
+  - name: menu-service
+    dockerfile_path: restaurant-microservices/services/menu-service/Dockerfile
+    source_dir: restaurant-microservices/services/menu-service
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api/menu
+    envs:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        type: SECRET
+        value: "django-production-secret-key-x7k2m9n8p5q6r7s8t9u0v1w2"
+      - key: DB_HOST
+        value: "restaurant-erp-do-user-28536171-0.e.db.ondigitalocean.com"
+      - key: DB_PORT
+        value: "25060"
+      - key: DB_NAME
+        value: "defaultdb"
+      - key: DB_USER
+        value: "doadmin"
+      - key: DB_PASSWORD
+        type: SECRET
+        value: "YOUR_ACTUAL_DB_PASSWORD_HERE"
+      - key: DB_SSL
+        value: "true"
+      - key: ALLOWED_HOSTS
+        value: "*.ondigitalocean.app"
+
+  # Billing Service
+  - name: billing-service
+    dockerfile_path: restaurant-microservices/services/billing-service/Dockerfile
+    source_dir: restaurant-microservices/services/billing-service
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api/billing
+    envs:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        type: SECRET
+        value: "django-production-secret-key-x7k2m9n8p5q6r7s8t9u0v1w2"
+      - key: DB_HOST
+        value: "restaurant-erp-do-user-28536171-0.e.db.ondigitalocean.com"
+      - key: DB_PORT
+        value: "25060"
+      - key: DB_NAME
+        value: "defaultdb"
+      - key: DB_USER
+        value: "doadmin"
+      - key: DB_PASSWORD
+        type: SECRET
+        value: "YOUR_ACTUAL_DB_PASSWORD_HERE"
+      - key: DB_SSL
+        value: "true"
+      - key: ALLOWED_HOSTS
+        value: "*.ondigitalocean.app"
+
+  # Customer Service
+  - name: customer-service
+    dockerfile_path: restaurant-microservices/services/customer-service/Dockerfile
+    source_dir: restaurant-microservices/services/customer-service
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api/customers
+    envs:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        type: SECRET
+        value: "django-production-secret-key-x7k2m9n8p5q6r7s8t9u0v1w2"
+      - key: DB_HOST
+        value: "restaurant-erp-do-user-28536171-0.e.db.ondigitalocean.com"
+      - key: DB_PORT
+        value: "25060"
+      - key: DB_NAME
+        value: "defaultdb"
+      - key: DB_USER
+        value: "doadmin"
+      - key: DB_PASSWORD
+        type: SECRET
+        value: "YOUR_ACTUAL_DB_PASSWORD_HERE"
+      - key: DB_SSL
+        value: "true"
+      - key: ALLOWED_HOSTS
+        value: "*.ondigitalocean.app"
+
+  # Table Service
+  - name: table-service
+    dockerfile_path: restaurant-microservices/services/table-service/Dockerfile
+    source_dir: restaurant-microservices/services/table-service
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api/tables
+    envs:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        type: SECRET
+        value: "django-production-secret-key-x7k2m9n8p5q6r7s8t9u0v1w2"
+      - key: DB_HOST
+        value: "restaurant-erp-do-user-28536171-0.e.db.ondigitalocean.com"
+      - key: DB_PORT
+        value: "25060"
+      - key: DB_NAME
+        value: "defaultdb"
+      - key: DB_USER
+        value: "doadmin"
+      - key: DB_PASSWORD
+        type: SECRET
+        value: "YOUR_ACTUAL_DB_PASSWORD_HERE"
+      - key: DB_SSL
+        value: "true"
+      - key: ALLOWED_HOSTS
+        value: "*.ondigitalocean.app"
+
+  # Staff Service
+  - name: staff-service
+    dockerfile_path: restaurant-microservices/services/staff-service/Dockerfile
+    source_dir: restaurant-microservices/services/staff-service
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api/staff
+    envs:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        type: SECRET
+        value: "django-production-secret-key-x7k2m9n8p5q6r7s8t9u0v1w2"
+      - key: DB_HOST
+        value: "restaurant-erp-do-user-28536171-0.e.db.ondigitalocean.com"
+      - key: DB_PORT
+        value: "25060"
+      - key: DB_NAME
+        value: "defaultdb"
+      - key: DB_USER
+        value: "doadmin"
+      - key: DB_PASSWORD
+        type: SECRET
+        value: "YOUR_ACTUAL_DB_PASSWORD_HERE"
+      - key: DB_SSL
+        value: "true"
+      - key: ALLOWED_HOSTS
+        value: "*.ondigitalocean.app"
+
+  # Reservation Service
+  - name: reservation-service
+    dockerfile_path: restaurant-microservices/services/reservation-service/Dockerfile
+    source_dir: restaurant-microservices/services/reservation-service
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api/reservations
+    envs:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        type: SECRET
+        value: "django-production-secret-key-x7k2m9n8p5q6r7s8t9u0v1w2"
+      - key: DB_HOST
+        value: "restaurant-erp-do-user-28536171-0.e.db.ondigitalocean.com"
+      - key: DB_PORT
+        value: "25060"
+      - key: DB_NAME
+        value: "defaultdb"
+      - key: DB_USER
+        value: "doadmin"
+      - key: DB_PASSWORD
+        type: SECRET
+        value: "YOUR_ACTUAL_DB_PASSWORD_HERE"
+      - key: DB_SSL
+        value: "true"
+      - key: ALLOWED_HOSTS
+        value: "*.ondigitalocean.app"
+
+  # Dashboard Service
+  - name: dashboard-service
+    dockerfile_path: restaurant-microservices/services/dashboard-service/Dockerfile
+    source_dir: restaurant-microservices/services/dashboard-service
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api/dashboard
+    envs:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        type: SECRET
+        value: "django-production-secret-key-x7k2m9n8p5q6r7s8t9u0v1w2"
+      - key: DB_HOST
+        value: "restaurant-erp-do-user-28536171-0.e.db.ondigitalocean.com"
+      - key: DB_PORT
+        value: "25060"
+      - key: DB_NAME
+        value: "defaultdb"
+      - key: DB_USER
+        value: "doadmin"
+      - key: DB_PASSWORD
+        type: SECRET
+        value: "YOUR_ACTUAL_DB_PASSWORD_HERE"
+      - key: DB_SSL
+        value: "true"
+      - key: ALLOWED_HOSTS
+        value: "*.ondigitalocean.app"
+
+# Frontend - Static Site
+static_sites:
+  - name: restaurant-frontend
+    build_command: npm run build
+    environment_slug: node-js
+    github:
+      repo: minhducht239/MS_restaurant_erp
+      branch: master
+      deploy_on_push: true
+    source_dir: MS_restaurant_erp_FE
+    output_dir: build
+    envs:
+      - key: REACT_APP_AUTH_API_URL
+        value: "https://auth-service-${APP_DOMAIN}/api/auth"
+      - key: REACT_APP_MENU_API_URL
+        value: "https://menu-service-${APP_DOMAIN}/api/menu"
+      - key: REACT_APP_BILLING_API_URL
+        value: "https://billing-service-${APP_DOMAIN}/api/billing"
+      - key: REACT_APP_CUSTOMER_API_URL
+        value: "https://customer-service-${APP_DOMAIN}/api/customers"
+      - key: REACT_APP_TABLES_API_URL
+        value: "https://table-service-${APP_DOMAIN}/api/tables"
+      - key: REACT_APP_STAFF_API_URL
+        value: "https://staff-service-${APP_DOMAIN}/api/staff"
+      - key: REACT_APP_RESERVATION_API_URL
+        value: "https://reservation-service-${APP_DOMAIN}/api/reservations"
+      - key: REACT_APP_DASHBOARD_API_URL
+        value: "https://dashboard-service-${APP_DOMAIN}/api/dashboard"
