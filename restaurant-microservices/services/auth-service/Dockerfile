@@ -50,5 +50,9 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
 # Expose port
 EXPOSE 8000
 
+# Create entrypoint script for migrations
+RUN echo '#!/bin/bash\npython manage.py migrate --noinput\nexec "$@"' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+
 # Use sync workers for MySQL thread safety
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["python", "-m", "gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--threads", "2", "--timeout", "30", "auth_service.wsgi:application"]
