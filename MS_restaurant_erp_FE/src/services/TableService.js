@@ -14,7 +14,7 @@ export const getTables = async (filters = {}) => {
   try {
     console.log("Getting tables with filters:", filters);
     const { floor, status } = filters;
-    let url = `${API_URL}/`;
+    let url = `${API_URL}/api/tables/`;
 
     // Thêm query params nếu có
     const params = new URLSearchParams();
@@ -58,7 +58,7 @@ export const getTableDetails = async (tableId) => {
   if (!tableId) throw new Error("Table ID is required");
 
   try {
-    const response = await axios.get(`${API_URL}/${tableId}/`, {
+    const response = await axios.get(`${API_URL}/api/tables/${tableId}/`, {
       headers: getAuthHeader(),
     });
     return response.data;
@@ -76,7 +76,7 @@ export const getTableOrders = async (tableId) => {
   if (!tableId) throw new Error("Table ID is required");
 
   try {
-    const response = await axios.get(`${API_URL}/${tableId}/orders/`, {
+    const response = await axios.get(`${API_URL}/api/tables/${tableId}/orders/`, {
       headers: getAuthHeader(),
     });
     return response.data;
@@ -102,7 +102,7 @@ export const updateTableStatus = async (tableId, status) => {
     console.log(`API: Updating table ${tableId} status to: ${status}`);
 
     const response = await axios.patch(
-      `${API_URL}/${tableId}/`,
+      `${API_URL}/api/tables/${tableId}/`,
       { status },
       {
         headers: {
@@ -133,7 +133,7 @@ export const addOrderToTable = async (tableId, items) => {
     try {
       // Try to add items directly
       const response = await axios.post(
-        `${API_URL}/${tableId}/add_item/`,
+        `${API_URL}/api/tables/${tableId}/add_item/`,
         items, // Send items array directly
         {
           headers: {
@@ -157,7 +157,7 @@ export const addOrderToTable = async (tableId, items) => {
     if (!hasActiveOrder) {
       console.log("No active order, creating one first...");
       await axios.post(
-        `${API_URL}/${tableId}/create_order/`,
+        `${API_URL}/api/tables/${tableId}/create_order/`,
         { notes: "" },
         {
           headers: {
@@ -169,7 +169,7 @@ export const addOrderToTable = async (tableId, items) => {
       console.log("Order created, now adding items...");
 
       // Now add items
-      const response = await axios.post(`${API_URL}/${tableId}/add_item/`, items, {
+      const response = await axios.post(`${API_URL}/api/tables/${tableId}/add_item/`, items, {
         headers: {
           ...getAuthHeader(),
           "Content-Type": "application/json",
@@ -201,15 +201,19 @@ export const createBillFromTable = async (tableId, billData = {}) => {
     };
 
     console.log("Sending bill creation request:");
-    console.log("- URL:", `${API_URL}/${tableId}/create_bill/`);
+    console.log("- URL:", `${API_URL}/api/tables/${tableId}/create_bill/`);
     console.log("- Data:", requestData);
 
-    const response = await axios.post(`${API_URL}/${tableId}/create_bill/`, requestData, {
-      headers: {
-        ...getAuthHeader(),
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await axios.post(
+      `${API_URL}/api/tables/${tableId}/create_bill/`,
+      requestData,
+      {
+        headers: {
+          ...getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     console.log("Raw axios response:", response);
     console.log("Response status:", response.status);
@@ -249,7 +253,7 @@ export const createTable = async (tableData) => {
   if (!tableData || !tableData.name) throw new Error("Table name is required");
 
   try {
-    const response = await axios.post(`${API_URL}/`, tableData, {
+    const response = await axios.post(`${API_URL}/api/tables/`, tableData, {
       headers: {
         ...getAuthHeader(),
         "Content-Type": "application/json",
@@ -273,7 +277,7 @@ export const deleteTable = async (tableId) => {
   if (!tableId) throw new Error("Table ID is required");
 
   try {
-    const response = await axios.delete(`${API_URL}/${tableId}/`, {
+    const response = await axios.delete(`${API_URL}/api/tables/${tableId}/`, {
       headers: getAuthHeader(),
     });
     return response.data;

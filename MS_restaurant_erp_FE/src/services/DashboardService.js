@@ -29,14 +29,14 @@ export const getDashboardStatistics = async () => {
 
   return logApiCall(
     "getDashboardStatistics",
-    axios.get(`${API_URL}/statistics/`, { headers }).then((response) => response.data)
+    axios.get(`${API_URL}/api/dashboard/statistics/`, { headers }).then((response) => response.data)
   );
 };
 
 // Lấy dữ liệu doanh thu theo tuần
 export const getWeeklyRevenue = async () => {
   try {
-    const response = await axios.get(`${API_URL}/weekly-revenue/`, {
+    const response = await axios.get(`${API_URL}/api/dashboard/weekly-revenue/`, {
       headers: getAuthHeader(),
     });
 
@@ -58,7 +58,7 @@ export const getWeeklyRevenue = async () => {
 // Thêm hàm doanh thu theo tháng
 export const getMonthlyRevenue = async () => {
   try {
-    const response = await axios.get(`${API_URL}/monthly-revenue/`, {
+    const response = await axios.get(`${API_URL}/api/dashboard/monthly-revenue/`, {
       headers: getAuthHeader(),
     });
 
@@ -76,7 +76,7 @@ export const getMonthlyRevenue = async () => {
 export const getTopSellingItems = async () => {
   try {
     console.log("Calling top-items API...");
-    const response = await axios.get(`${API_URL}/top-items/`, {
+    const response = await axios.get(`${API_URL}/api/dashboard/top-items/`, {
       headers: getAuthHeader(),
     });
 

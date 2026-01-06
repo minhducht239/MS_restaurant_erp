@@ -26,7 +26,7 @@ export const getStaff = async (params = {}) => {
     }
 
     // Log để kiểm tra URL cuối cùng
-    const requestUrl = `${API_URL}/?${queryString.toString()}`;
+    const requestUrl = `${API_URL}/api/staff/?${queryString.toString()}`;
     console.log("Requesting:", requestUrl);
 
     const response = await axios.get(requestUrl, {
@@ -104,7 +104,7 @@ function getSampleStaffData() {
 // Tạo nhân viên mới
 export const createStaff = async (staffData) => {
   try {
-    const response = await axios.post(`${API_URL}/`, staffData, {
+    const response = await axios.post(`${API_URL}/api/staff/`, staffData, {
       headers: {
         ...getAuthHeader(),
         "Content-Type": "application/json",
@@ -120,7 +120,7 @@ export const createStaff = async (staffData) => {
 // Cập nhật nhân viên
 export const updateStaff = async (id, staffData) => {
   try {
-    const response = await axios.put(`${API_URL}/${id}/`, staffData, {
+    const response = await axios.put(`${API_URL}/api/staff/${id}/`, staffData, {
       headers: {
         ...getAuthHeader(),
         "Content-Type": "application/json",
@@ -136,7 +136,7 @@ export const updateStaff = async (id, staffData) => {
 // Xóa nhân viên
 export const deleteStaff = async (id) => {
   try {
-    await axios.delete(`${API_URL}/${id}/`, {
+    await axios.delete(`${API_URL}/api/staff/${id}/`, {
       headers: getAuthHeader(),
     });
   } catch (error) {

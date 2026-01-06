@@ -1,7 +1,8 @@
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
+from django.views.static import serve
 
 def health_check(request):
     return JsonResponse({'status': 'healthy', 'service': 'menu-service'})
@@ -19,8 +20,18 @@ def api_root(request):
 urlpatterns = [
     path('', api_root, name='api_root'),
     path('health/', health_check, name='health_check'),
+    # API routes with /api/menu/ prefix
+    path('api/menu/', include('menu.urls')),
+    # Also keep without prefix for backward compatibility
     path('', include('menu.urls')),
 ]
 
+# Always serve media files (for development and production)
+# In production, consider using nginx or cloud storage for better performance
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]
+
+# Also add static serving for DEBUG mode
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -13,7 +13,7 @@ const getAuthHeader = () => {
 // Lấy danh sách hóa đơn
 export const getBills = async (params = {}) => {
   try {
-    let url = `${API_URL}/bills/`;
+    let url = `${API_URL}/api/billing/bills/`;
 
     // Log chi tiết các tham số ngày
     if (params.from_date || params.to_date) {
@@ -52,7 +52,7 @@ export const getBills = async (params = {}) => {
 // Lấy chi tiết hóa đơn
 export const getBillDetail = async (id) => {
   try {
-    const response = await axios.get(`${API_URL}/bills/${id}/`, {
+    const response = await axios.get(`${API_URL}/api/billing/bills/${id}/`, {
       headers: getAuthHeader(),
     });
 
@@ -107,7 +107,7 @@ export const createBill = async (billData) => {
       // Tạo hóa đơn thường
       console.log("Creating regular bill");
 
-      const response = await axios.post(`${API_URL}/bills/`, billData, {
+      const response = await axios.post(`${API_URL}/api/billing/bills/`, billData, {
         headers: {
           ...getAuthHeader(),
           "Content-Type": "application/json",
@@ -137,7 +137,7 @@ export const createBill = async (billData) => {
 // Xóa hóa đơn
 export const deleteBill = async (id) => {
   try {
-    await axios.delete(`${API_URL}/bills/${id}/`, {
+    await axios.delete(`${API_URL}/api/billing/bills/${id}/`, {
       headers: getAuthHeader(),
     });
   } catch (error) {
@@ -149,7 +149,7 @@ export const deleteBill = async (id) => {
 // Lấy dữ liệu doanh thu theo tháng
 export const getMonthlyRevenue = async (year = new Date().getFullYear()) => {
   try {
-    const response = await axios.get(`${API_URL}/bills/monthly_revenue/?year=${year}`, {
+    const response = await axios.get(`${API_URL}/api/billing/bills/monthly_revenue/?year=${year}`, {
       headers: getAuthHeader(),
     });
     return response.data;

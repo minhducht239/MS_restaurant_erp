@@ -34,6 +34,13 @@ RUN pip install --no-cache-dir -r requirements.txt && \
     which gunicorn && \
     gunicorn --version
 
+# Create media directory for avatars
+RUN mkdir -p /app/media/avatars
+
+# Copy entrypoint script BEFORE creating user
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Create non-root user for security but keep executables accessible
 RUN adduser --disabled-password --gecos '' appuser && \
     chown -R appuser:appuser /app && \
@@ -49,17 +56,6 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
 
 # Expose port
 EXPOSE 8000
-
-# Create entrypoint script - for auth service we need real schema; drop old auth tables then migrate
-RUN echo '#!/bin/bash' > /app/entrypoint.sh && \
-    echo 'set -e' >> /app/entrypoint.sh && \
-    echo 'echo "🔥 Resetting auth tables + migration history..."' >> /app/entrypoint.sh && \
-    echo 'python -c "import os, django; os.environ.setdefault(\"DJANGO_SETTINGS_MODULE\", \"auth_service.settings\"); django.setup(); from django.db import connection; cursor = connection.cursor(); tables=[\"auth_user\", \"auth_group_permissions\", \"auth_user_groups\", \"auth_user_user_permissions\", \"authentication_role\", \"authentication_permission\", \"authentication_login_history\", \"authentication_user_activity_log\"]; [cursor.execute(f\\\"DROP TABLE IF EXISTS {t}\\\") for t in tables]; cursor.execute(\"DELETE FROM django_migrations\"); print(\"✓ Tables dropped + history wiped.\")"' >> /app/entrypoint.sh && \
-    echo 'echo "🚀 Running real migrations..."' >> /app/entrypoint.sh && \
-    echo 'python manage.py migrate' >> /app/entrypoint.sh && \
-    echo 'echo "✅ Migrations complete!"' >> /app/entrypoint.sh && \
-    echo 'exec "$@"' >> /app/entrypoint.sh && \
-    chmod +x /app/entrypoint.sh
 
 # Use sync workers for MySQL thread safety
 ENTRYPOINT ["/app/entrypoint.sh"]

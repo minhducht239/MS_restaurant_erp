@@ -25,8 +25,29 @@ class MenuItemSerializer(serializers.ModelSerializer):
 
 
 class MenuItemCreateSerializer(serializers.ModelSerializer):
-    """Serializer for creating menu items"""
+    """Serializer for creating/updating menu items with image upload"""
+    
+    image = serializers.ImageField(required=False, allow_null=True, allow_empty_file=True)
     
     class Meta:
         model = MenuItem
         fields = ['name', 'description', 'price', 'category', 'image', 'is_available']
+    
+    def validate_image(self, value):
+        """Validate image field - allow empty string as null"""
+        if value == '' or value is None:
+            return None
+        return value
+    
+    def to_internal_value(self, data):
+        """Override to handle empty image string"""
+        # Handle case where image is an empty string or 'null' string
+        if 'image' in data:
+            image_value = data.get('image')
+            if image_value == '' or image_value == 'null' or image_value is None:
+                # Remove image from data so it won't be updated
+                if hasattr(data, 'pop'):
+                    data.pop('image', None)
+                elif isinstance(data, dict):
+                    data = {k: v for k, v in data.items() if k != 'image'}
+        return super().to_internal_value(data)

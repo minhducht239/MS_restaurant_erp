@@ -98,7 +98,7 @@ export const getCustomers = async (page = 1, filters = {}, forceRefresh = false)
       }
     });
 
-    const url = `${API_URL}/`;
+    const url = `${API_URL}/api/customers/`;
     console.log("Final API request:", {
       url,
       params: cleanParams,
@@ -169,7 +169,7 @@ export const searchCustomers = async (query) => {
   }
 
   try {
-    const response = await axios.get(`${API_URL}/`, {
+    const response = await axios.get(`${API_URL}/api/customers/`, {
       params: {
         search: query.trim(),
         limit: 10,
@@ -191,7 +191,7 @@ export const getCustomerByPhone = async (phone) => {
   }
 
   try {
-    const response = await axios.get(`${API_URL}/`, {
+    const response = await axios.get(`${API_URL}/api/customers/`, {
       params: {
         phone: phone.trim(),
       },
@@ -229,7 +229,7 @@ export const getCustomersLegacy = async (page = 1, search = "") => {
 
 export const getCustomerDetail = async (id, forceRefresh = false) => {
   try {
-    const url = `${API_URL}/${id}/`;
+    const url = `${API_URL}/api/customers/${id}/`;
     console.log("Fetching customer detail:", { id, forceRefresh });
 
     const params = {};
@@ -267,7 +267,7 @@ export const getCustomerDetail = async (id, forceRefresh = false) => {
 
 export const getCustomerLoyaltyHistory = async (id, forceRefresh = false) => {
   try {
-    const url = `${API_URL}/${id}/loyalty_history/`;
+    const url = `${API_URL}/api/customers/${id}/loyalty_history/`;
     console.log("Fetching loyalty history:", { id, forceRefresh });
 
     const params = {};
@@ -305,7 +305,7 @@ export const getCustomerLoyaltyHistory = async (id, forceRefresh = false) => {
 
 export const getCustomerAnalytics = async (filters = {}) => {
   try {
-    const url = `${API_URL}/analytics/`;
+    const url = `${API_URL}/api/customers/analytics/`;
     console.log("Fetching customer analytics:", filters);
 
     const response = await axios.get(url, {
@@ -336,7 +336,7 @@ export const getCustomerAnalytics = async (filters = {}) => {
 
 export const sendCustomerNotification = async (customerId, notificationData) => {
   try {
-    const url = `${API_URL}/${customerId}/notifications/`;
+    const url = `${API_URL}/api/customers/${customerId}/notifications/`;
     console.log("Sending notification:", { customerId, notificationData });
 
     const response = await axios.post(url, notificationData, {
@@ -356,7 +356,7 @@ export const sendCustomerNotification = async (customerId, notificationData) => 
 
 export const updateCustomerLoyaltyPoints = async (customerId, pointsData) => {
   try {
-    const url = `${API_URL}/${customerId}/loyalty_points/`;
+    const url = `${API_URL}/api/customers/${customerId}/loyalty_points/`;
     console.log("Updating loyalty points:", { customerId, pointsData });
 
     const response = await axios.post(url, pointsData, {
@@ -378,7 +378,7 @@ export const updateCustomerLoyaltyPoints = async (customerId, pointsData) => {
 
 export const exportCustomers = async (filters = {}, format = "excel") => {
   try {
-    const url = `${API_URL}/export/`;
+    const url = `${API_URL}/api/customers/export/`;
     console.log("Exporting customers:", { filters, format });
 
     const response = await axios.get(url, {
@@ -397,7 +397,7 @@ export const exportCustomers = async (filters = {}, format = "excel") => {
 
 export const createCustomer = async (customerData) => {
   try {
-    const url = `${API_URL}/`;
+    const url = `${API_URL}/api/customers/`;
     console.log("Creating customer:", customerData);
 
     const response = await axios.post(url, customerData, {
@@ -419,7 +419,7 @@ export const createCustomer = async (customerData) => {
 
 export const updateCustomer = async (id, customerData) => {
   try {
-    const url = `${API_URL}/${id}/`;
+    const url = `${API_URL}/api/customers/${id}/`;
     console.log(`Updating customer ID=${id}:`, customerData);
 
     const response = await axios.put(url, customerData, {
@@ -441,7 +441,7 @@ export const updateCustomer = async (id, customerData) => {
 
 export const deleteCustomer = async (id) => {
   try {
-    const url = `${API_URL}/${id}/`;
+    const url = `${API_URL}/api/customers/${id}/`;
     console.log(`Deleting customer ID=${id}`);
 
     await axios.delete(url, {

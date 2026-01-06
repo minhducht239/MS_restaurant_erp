@@ -356,27 +356,61 @@ def change_password(request):
     })
 
 
-@api_view(['POST'])
+@api_view(['POST', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def upload_avatar(request):
-    """Upload user avatar"""
+    """Upload or delete user avatar"""
+    user = request.user
+    
+    if request.method == 'DELETE':
+        # Delete avatar
+        if user.avatar:
+            user.avatar.delete(save=False)
+        user.avatar = None
+        user.save()
+        log_user_activity(user, 'avatar_delete', request, 'Avatar deleted')
+        return Response({
+            'success': True,
+            'message': 'Avatar deleted',
+            'avatar_url': user.get_avatar_url
+        })
+    
+    # POST - Upload avatar
+    logger.info(f"=== UPLOAD AVATAR ===")
+    logger.info(f"Content-Type: {request.content_type}")
+    logger.info(f"Request FILES: {request.FILES}")
+    logger.info(f"Request DATA keys: {list(request.data.keys())}")
+    
     if 'avatar' not in request.FILES:
         return Response({
             'success': False,
             'message': 'No avatar file provided'
         }, status=status.HTTP_400_BAD_REQUEST)
     
-    user = request.user
-    user.avatar = request.FILES['avatar']
+    avatar_file = request.FILES['avatar']
+    logger.info(f"Avatar file: {avatar_file.name}, size: {avatar_file.size}")
+    
+    # Delete old avatar if exists
+    if user.avatar:
+        user.avatar.delete(save=False)
+    
+    user.avatar = avatar_file
     user.save()
+    
+    # Build absolute URL for avatar
+    avatar_url = user.get_avatar_url
+    if avatar_url and not avatar_url.startswith('http'):
+        avatar_url = request.build_absolute_uri(avatar_url)
+    
+    logger.info(f"Avatar saved: {avatar_url}")
     
     # Log activity
     log_user_activity(user, 'avatar_upload', request, 'Avatar uploaded')
     
     return Response({
         'success': True,
-        'message': 'Avatar uploaded',
-        'avatar_url': user.avatar_url
+        'message': 'Avatar uploaded successfully',
+        'avatar_url': avatar_url
     })
 
 
