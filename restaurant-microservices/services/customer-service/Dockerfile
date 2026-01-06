@@ -18,4 +18,8 @@ RUN python manage.py collectstatic --noinput || true
 
 EXPOSE 8000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "customer_service.wsgi:application"]
+# Create entrypoint script for migrations
+RUN echo '#!/bin/bash\npython manage.py migrate --noinput\nexec "$@"' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "2", "--timeout", "30", "customer_service.wsgi:application"]
