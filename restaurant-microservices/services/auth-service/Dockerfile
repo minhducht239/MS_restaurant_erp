@@ -50,13 +50,13 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
 # Expose port
 EXPOSE 8000
 
-# Create entrypoint script - simply fake all migrations since tables already exist
+# Create entrypoint script - for auth service we need real schema; drop old auth tables then migrate
 RUN echo '#!/bin/bash' > /app/entrypoint.sh && \
     echo 'set -e' >> /app/entrypoint.sh && \
-    echo 'echo "🔥 Clearing migration history..."' >> /app/entrypoint.sh && \
-    echo 'python -c "import os, django; os.environ.setdefault(\"DJANGO_SETTINGS_MODULE\", \"auth_service.settings\"); django.setup(); from django.db import connection; cursor = connection.cursor(); cursor.execute(\"DELETE FROM django_migrations\"); print(\"✓ History wiped.\")"' >> /app/entrypoint.sh && \
-    echo 'echo "🙈 Faking ALL migrations (tables already exist)..."' >> /app/entrypoint.sh && \
-    echo 'python manage.py migrate --fake' >> /app/entrypoint.sh && \
+    echo 'echo "🔥 Resetting auth tables + migration history..."' >> /app/entrypoint.sh && \
+    echo 'python -c "import os, django; os.environ.setdefault(\"DJANGO_SETTINGS_MODULE\", \"auth_service.settings\"); django.setup(); from django.db import connection; cursor = connection.cursor(); tables=[\"auth_user\", \"auth_group_permissions\", \"auth_user_groups\", \"auth_user_user_permissions\", \"authentication_role\", \"authentication_permission\", \"authentication_login_history\", \"authentication_user_activity_log\"]; [cursor.execute(f\\\"DROP TABLE IF EXISTS {t}\\\") for t in tables]; cursor.execute(\"DELETE FROM django_migrations\"); print(\"✓ Tables dropped + history wiped.\")"' >> /app/entrypoint.sh && \
+    echo 'echo "🚀 Running real migrations..."' >> /app/entrypoint.sh && \
+    echo 'python manage.py migrate' >> /app/entrypoint.sh && \
     echo 'echo "✅ Migrations complete!"' >> /app/entrypoint.sh && \
     echo 'exec "$@"' >> /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh
