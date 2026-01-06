@@ -1,5 +1,6 @@
 // Cấu hình API URL cho từng service từ environment variables
-const PRODUCTION_API_URL = "https://lionfish-app-jfnln.ondigitalocean.app";
+// Demo local: trỏ về gateway hoặc auth-service tại cổng 8000
+const PRODUCTION_API_URL = "http://localhost:8000";
 
 export const API_BASE_URL = {
   auth: process.env.REACT_APP_AUTH_API_URL || PRODUCTION_API_URL,
