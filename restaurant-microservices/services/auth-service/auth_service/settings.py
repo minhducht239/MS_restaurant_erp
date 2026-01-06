@@ -103,7 +103,8 @@ DATABASES = {
                 'ssl_disabled': False,
             } if DATABASE_URL or os.environ.get('DB_SSL', 'false').lower() == 'true' else {},
         },
-        'CONN_MAX_AGE': 3600,  # Connection pooling
+        'CONN_MAX_AGE': 0,  # Disable persistent connections for gevent compatibility
+        'CONN_HEALTH_CHECKS': True,
     }
 }
 
