@@ -7,8 +7,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 EXPOSE 8000
 
-# Create entrypoint script for migrations using --fake-initial
-RUN printf '#!/bin/bash\nset -e\necho "Running migrations with --fake-initial..."\npython manage.py migrate --noinput --fake-initial\necho "Migrations complete"\nexec "$@"\n' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+# Create entrypoint script to clear migration history and re-migrate
+RUN echo '#!/bin/bash' > /app/entrypoint.sh && \
+    echo 'set -e' >> /app/entrypoint.sh && \
+    echo 'echo "🔥 Clearing migration history..."' >> /app/entrypoint.sh && \
+    echo 'python -c "import os, django; os.environ.setdefault(\\"DJANGO_SETTINGS_MODULE\\", \\"staff_service.settings\\"); django.setup(); from django.db import connection; cursor = connection.cursor(); cursor.execute(\\"DELETE FROM django_migrations\\"); print(\\"✓ History wiped.\\")"' >> /app/entrypoint.sh && \
+    echo 'python manage.py migrate contenttypes --fake' >> /app/entrypoint.sh && \
+    echo 'python manage.py migrate auth --fake' >> /app/entrypoint.sh && \
+    echo 'python manage.py migrate --fake-initial' >> /app/entrypoint.sh && \
+    echo 'exec "$@"' >> /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "2", "--timeout", "30", "staff_service.wsgi:application"]
