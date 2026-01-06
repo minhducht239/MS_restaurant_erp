@@ -18,4 +18,8 @@ urlpatterns = [
     path('', api_root, name='api_root'),
     path('health/', health_check, name='health_check'),
     path('', include('tables.urls')),
+    
+    # With /api/table/ prefix for production gateway routing
+    path('api/table/', include('tables.urls')),
+    path('api/table/health/', health_check, name='health_check_api'),
 ]

@@ -17,4 +17,8 @@ urlpatterns = [
     path('', api_root, name='api_root'),
     path('health/', health_check, name='health_check'),
     path('', include('reservations.urls')),
+    
+    # With /api/reservation/ prefix for production gateway routing
+    path('api/reservation/', include('reservations.urls')),
+    path('api/reservation/health/', health_check, name='health_check_api'),
 ]
