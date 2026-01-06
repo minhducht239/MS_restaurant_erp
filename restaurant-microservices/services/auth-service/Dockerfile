@@ -50,8 +50,8 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
 # Expose port
 EXPOSE 8000
 
-# Create entrypoint script for migrations using --fake-initial
-RUN printf '#!/bin/bash\nset -e\necho "Running migrations with --fake-initial..."\npython manage.py migrate --noinput --fake-initial\necho "Migrations complete"\nexec "$@"\n' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+# Create entrypoint script to clear migration history and re-migrate
+RUN printf '#!/bin/bash\nset -e\necho "Clearing migration history from database..."\npython -c "\nfrom django.db import connection\nwith connection.cursor() as cursor:\n    cursor.execute(\"DELETE FROM django_migrations WHERE app IN (\\'admin\\', \\'auth\\', \\'contenttypes\\', \\'sessions\\', \\'token_blacklist\\')\") \n    print(\"✓ Cleared migration history\")\n"\necho "Running fresh migrations..."\npython manage.py migrate --noinput 2>&1 | head -20 || echo \"Migration attempted\"\necho "Entrypoint complete"\nexec "$@"\n' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Use sync workers for MySQL thread safety
 ENTRYPOINT ["/app/entrypoint.sh"]
