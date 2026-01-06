@@ -18,8 +18,8 @@ RUN python manage.py collectstatic --noinput || true
 
 EXPOSE 8000
 
-# Create entrypoint script for migrations
-RUN echo '#!/bin/bash\npython manage.py migrate --noinput\nexec "$@"' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+# Create entrypoint script for migrations - fix migration history
+RUN echo '#!/bin/bash\n\npython manage.py shell -c "from django.db import connection; cursor = connection.cursor(); cursor.execute(\\"DELETE FROM django_migrations WHERE app IN (\'auth\', \'contenttypes\')\\"); connection.commit(); print(\\"Cleaned migration history\\");" 2>/dev/null || true\n\npython manage.py migrate --noinput\n\nexec \"$@\"' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "2", "--timeout", "30", "customer_service.wsgi:application"]

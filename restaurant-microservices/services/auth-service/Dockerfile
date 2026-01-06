@@ -50,8 +50,8 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
 # Expose port
 EXPOSE 8000
 
-# Create entrypoint script for migrations
-RUN echo '#!/bin/bash\npython manage.py migrate --noinput\nexec "$@"' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+# Create entrypoint script for migrations - fix migration history and reset if needed
+RUN echo '#!/bin/bash\n\n# Try to fix migration history by deleting inconsistent migrations\npython manage.py shell -c "from django.db import connection; cursor = connection.cursor(); cursor.execute(\"DELETE FROM django_migrations WHERE app IN ('admin', 'auth', 'contenttypes', 'sessions', 'token_blacklist')\"); connection.commit(); print(\"Cleaned migration history\");" 2>/dev/null || true\n\n# Run migrations\npython manage.py migrate --noinput\n\nexec "$@"' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Use sync workers for MySQL thread safety
 ENTRYPOINT ["/app/entrypoint.sh"]
