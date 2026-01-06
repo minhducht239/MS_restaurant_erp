@@ -5,10 +5,27 @@ import os
 import sys
 from pathlib import Path
 from datetime import timedelta
+from urllib.parse import urlparse
 
 # Add shared module to path
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR.parent.parent / 'shared'))
+
+# Parse DATABASE_URL if available
+DATABASE_URL = os.environ.get('DATABASE_URL', '')
+if DATABASE_URL:
+    parsed = urlparse(DATABASE_URL)
+    DB_NAME = parsed.path.lstrip('/')
+    DB_USER = parsed.username or 'root'
+    DB_PASSWORD = parsed.password or ''
+    DB_HOST = parsed.hostname or 'localhost'
+    DB_PORT = str(parsed.port or 3306)
+else:
+    DB_NAME = os.environ.get('DB_NAME', 'defaultdb')
+    DB_USER = os.environ.get('DB_USER', 'root')
+    DB_PASSWORD = os.environ.get('DB_PASSWORD', '')
+    DB_HOST = os.environ.get('DB_HOST', 'localhost')
+    DB_PORT = os.environ.get('DB_PORT', '3306')
 
 # Security
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-auth-service-key')
@@ -71,11 +88,11 @@ WSGI_APPLICATION = 'auth_service.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_NAME', 'defaultdb'),
-        'USER': os.environ.get('DB_USER', 'root'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'MinhDucA123@'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '3306'),
+        'NAME': DB_NAME,
+        'USER': DB_USER,
+        'PASSWORD': DB_PASSWORD,
+        'HOST': DB_HOST,
+        'PORT': DB_PORT,
         'OPTIONS': {
             'charset': 'utf8mb4',
             'use_unicode': True,
@@ -84,7 +101,7 @@ DATABASES = {
             # SSL configuration for DigitalOcean managed database
             'ssl': {
                 'ssl_disabled': False,
-            } if os.environ.get('DB_SSL', 'false').lower() == 'true' else {},
+            } if DATABASE_URL or os.environ.get('DB_SSL', 'false').lower() == 'true' else {},
         },
         'CONN_MAX_AGE': 3600,  # Connection pooling
     }
