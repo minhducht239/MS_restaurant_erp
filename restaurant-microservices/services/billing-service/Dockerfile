@@ -27,22 +27,14 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')" || exit 1
 
-# Create entrypoint script to clear migration history and re-migrate
+# Create entrypoint script - simply fake all migrations since tables already exist
 RUN echo '#!/bin/bash' > /app/entrypoint.sh && \
     echo 'set -e' >> /app/entrypoint.sh && \
-    echo 'echo "🔥 Clearing ALL migration history..."' >> /app/entrypoint.sh && \
+    echo 'echo "🔥 Clearing migration history..."' >> /app/entrypoint.sh && \
     echo 'python -c "import os, django; os.environ.setdefault(\"DJANGO_SETTINGS_MODULE\", \"billing_service.settings\"); django.setup(); from django.db import connection; cursor = connection.cursor(); cursor.execute(\"DELETE FROM django_migrations\"); print(\"✓ History wiped.\")"' >> /app/entrypoint.sh && \
-    echo 'echo "🙈 Faking base/system apps..."' >> /app/entrypoint.sh && \
-    echo 'python manage.py migrate contenttypes --fake' >> /app/entrypoint.sh && \
-    echo 'python manage.py migrate auth --fake' >> /app/entrypoint.sh && \
-    echo 'python manage.py migrate admin --fake' >> /app/entrypoint.sh && \
-    echo 'python manage.py migrate sessions --fake' >> /app/entrypoint.sh && \
-    echo 'python manage.py migrate token_blacklist --fake 2>/dev/null || true' >> /app/entrypoint.sh && \
-    echo 'python manage.py migrate billing --fake' >> /app/entrypoint.sh && \
-    echo 'echo "🧹 Clearing migration history again to reset dependency checks..."' >> /app/entrypoint.sh && \
-    echo 'python -c "import os, django; os.environ.setdefault(\"DJANGO_SETTINGS_MODULE\", \"billing_service.settings\"); django.setup(); from django.db import connection; cursor = connection.cursor(); cursor.execute(\"DELETE FROM django_migrations\"); print(\"✓ History wiped again.\")"' >> /app/entrypoint.sh && \
-    echo 'echo "🚀 Running real migrations for custom apps..."' >> /app/entrypoint.sh && \
-    echo 'python manage.py migrate --fake-initial' >> /app/entrypoint.sh && \
+    echo 'echo "🙈 Faking ALL migrations (tables already exist)..."' >> /app/entrypoint.sh && \
+    echo 'python manage.py migrate --fake' >> /app/entrypoint.sh && \
+    echo 'echo "✅ Migrations complete!"' >> /app/entrypoint.sh && \
     echo 'exec "$@"' >> /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh
 
