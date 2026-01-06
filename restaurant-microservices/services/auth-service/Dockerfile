@@ -60,6 +60,7 @@ RUN echo '#!/bin/bash' > /app/entrypoint.sh && \
     echo 'python manage.py migrate auth --fake' >> /app/entrypoint.sh && \
     echo 'python manage.py migrate admin --fake' >> /app/entrypoint.sh && \
     echo 'python manage.py migrate sessions --fake' >> /app/entrypoint.sh && \
+    echo 'python manage.py migrate authentication --fake' >> /app/entrypoint.sh && \
     echo 'echo "🚀 Running real migrations for custom apps..."' >> /app/entrypoint.sh && \
     echo 'python manage.py migrate --fake-initial' >> /app/entrypoint.sh && \
     echo 'exec "$@"' >> /app/entrypoint.sh && \

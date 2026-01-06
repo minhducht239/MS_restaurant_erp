@@ -38,6 +38,7 @@ RUN echo '#!/bin/bash' > /app/entrypoint.sh && \
     echo 'python manage.py migrate admin --fake' >> /app/entrypoint.sh && \
     echo 'python manage.py migrate sessions --fake' >> /app/entrypoint.sh && \
     echo 'python manage.py migrate token_blacklist --fake 2>/dev/null || true' >> /app/entrypoint.sh && \
+    echo 'python manage.py migrate billing --fake' >> /app/entrypoint.sh && \
     echo 'echo "🚀 Running real migrations for custom apps..."' >> /app/entrypoint.sh && \
     echo 'python manage.py migrate --fake-initial' >> /app/entrypoint.sh && \
     echo 'exec "$@"' >> /app/entrypoint.sh && \

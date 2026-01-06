@@ -14,6 +14,7 @@ RUN echo '#!/bin/bash' > /app/entrypoint.sh && \
     echo 'python -c "import os, django; os.environ.setdefault(\\"DJANGO_SETTINGS_MODULE\\", \\"staff_service.settings\\"); django.setup(); from django.db import connection; cursor = connection.cursor(); cursor.execute(\\"DELETE FROM django_migrations\\"); print(\\"✓ History wiped.\\")"' >> /app/entrypoint.sh && \
     echo 'python manage.py migrate contenttypes --fake' >> /app/entrypoint.sh && \
     echo 'python manage.py migrate auth --fake' >> /app/entrypoint.sh && \
+    echo 'python manage.py migrate staff --fake' >> /app/entrypoint.sh && \
     echo 'python manage.py migrate --fake-initial' >> /app/entrypoint.sh && \
     echo 'exec "$@"' >> /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh
