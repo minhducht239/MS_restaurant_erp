@@ -16,5 +16,5 @@ def api_root(request):
 urlpatterns = [
     path('', api_root, name='api_root'),
     path('health/', health_check, name='health_check'),
-    path('api/reservations/', include('reservations.urls')),
+    path('', include('reservations.urls')),
 ]

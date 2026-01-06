@@ -1,13 +1,15 @@
 // Cấu hình API URL cho từng service từ environment variables
+const PRODUCTION_API_URL = "https://lionfish-app-jfnln.ondigitalocean.app";
+
 export const API_BASE_URL = {
-  auth: process.env.REACT_APP_AUTH_API_URL || "http://localhost:8001",
-  menu: process.env.REACT_APP_MENU_API_URL || "http://localhost:8002",
-  billing: process.env.REACT_APP_BILLING_API_URL || "http://localhost:8003",
-  customer: process.env.REACT_APP_CUSTOMER_API_URL || "http://localhost:8004",
-  tables: process.env.REACT_APP_TABLES_API_URL || "http://localhost:8005",
-  staff: process.env.REACT_APP_STAFF_API_URL || "http://localhost:8006",
-  reservation: process.env.REACT_APP_RESERVATION_API_URL || "http://localhost:8007",
-  dashboard: process.env.REACT_APP_DASHBOARD_API_URL || "http://localhost:8008",
+  auth: process.env.REACT_APP_AUTH_API_URL || PRODUCTION_API_URL,
+  menu: process.env.REACT_APP_MENU_API_URL || PRODUCTION_API_URL,
+  billing: process.env.REACT_APP_BILLING_API_URL || PRODUCTION_API_URL,
+  customer: process.env.REACT_APP_CUSTOMER_API_URL || PRODUCTION_API_URL,
+  tables: process.env.REACT_APP_TABLES_API_URL || PRODUCTION_API_URL,
+  staff: process.env.REACT_APP_STAFF_API_URL || PRODUCTION_API_URL,
+  reservation: process.env.REACT_APP_RESERVATION_API_URL || PRODUCTION_API_URL,
+  dashboard: process.env.REACT_APP_DASHBOARD_API_URL || PRODUCTION_API_URL,
 };
 
 // Export riêng cho các service cần dùng

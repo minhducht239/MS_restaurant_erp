@@ -19,7 +19,7 @@ def api_root(request):
 urlpatterns = [
     path('', api_root, name='api_root'),
     path('health/', health_check, name='health_check'),
-    path('api/menu/', include('menu.urls')),
+    path('', include('menu.urls')),
 ]
 
 if settings.DEBUG:
