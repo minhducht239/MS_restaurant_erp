@@ -39,6 +39,8 @@ RUN echo '#!/bin/bash' > /app/entrypoint.sh && \
     echo 'python manage.py migrate sessions --fake' >> /app/entrypoint.sh && \
     echo 'python manage.py migrate token_blacklist --fake 2>/dev/null || true' >> /app/entrypoint.sh && \
     echo 'python manage.py migrate billing --fake' >> /app/entrypoint.sh && \
+    echo 'echo "🧹 Clearing migration history again to reset dependency checks..."' >> /app/entrypoint.sh && \
+    echo 'python -c "import os, django; os.environ.setdefault(\"DJANGO_SETTINGS_MODULE\", \"billing_service.settings\"); django.setup(); from django.db import connection; cursor = connection.cursor(); cursor.execute(\"DELETE FROM django_migrations\"); print(\"✓ History wiped again.\")"' >> /app/entrypoint.sh && \
     echo 'echo "🚀 Running real migrations for custom apps..."' >> /app/entrypoint.sh && \
     echo 'python manage.py migrate --fake-initial' >> /app/entrypoint.sh && \
     echo 'exec "$@"' >> /app/entrypoint.sh && \
