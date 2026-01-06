@@ -50,5 +50,5 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
 # Expose port
 EXPOSE 8000
 
-# Use python -m gunicorn for better compatibility
-CMD ["python", "-m", "gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--worker-class", "gevent", "--worker-connections", "1000", "--max-requests", "1000", "--max-requests-jitter", "100", "--timeout", "30", "--preload", "auth_service.wsgi:application"]
+# Use sync workers for MySQL thread safety
+CMD ["python", "-m", "gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--threads", "2", "--timeout", "30", "auth_service.wsgi:application"]
