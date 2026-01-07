@@ -1,7 +1,5 @@
 import axios from "axios";
-
-// Auth Service URL - xử lý cả authentication và user profile
-const AUTH_API_URL = process.env.REACT_APP_AUTH_API_URL || "http://localhost:8001";
+import { AUTH_API_URL } from "./config";
 
 // Auth API Client
 const authClient = axios.create({

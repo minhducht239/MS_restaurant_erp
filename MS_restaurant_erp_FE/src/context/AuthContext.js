@@ -10,14 +10,18 @@ import React, {
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import axios from "axios";
+import { AUTH_API_URL } from "../services/config";
+// Debug: log which AUTH API base URL the app is using
+// This helps detect when CRA didn't reload env vars
+// and still points to localhost
+console.log("[Auth] AUTH_API_URL:", AUTH_API_URL);
 
 // Tạo context cho authentication
 const AuthContext = createContext(null);
 
 // ==================================================================
 // CẤU HÌNH URL API
-// ==================================================================
-const AUTH_API_URL = process.env.REACT_APP_AUTH_API_URL || "http://localhost:8001";
+// Lấy từ src/services/config để đồng bộ với các service khác
 // ==================================================================
 
 // AuthProvider để bao quanh toàn bộ ứng dụng
@@ -196,7 +200,9 @@ export const AuthProvider = ({ children }) => {
 
         console.log("Attempting login with:", { username: credentials.username });
 
-        const response = await axios.post(`${AUTH_API_URL}/api/auth/login/`, credentials, {
+        const loginUrl = `${AUTH_API_URL}/api/auth/login/`;
+        console.log("[Auth] Login URL:", loginUrl);
+        const response = await axios.post(loginUrl, credentials, {
           timeout: 15000,
         });
 
