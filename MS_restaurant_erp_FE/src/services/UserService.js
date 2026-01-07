@@ -1,6 +1,7 @@
 import axios from "axios";
-
-const AUTH_API_URL = process.env.REACT_APP_AUTH_API_URL || "http://localhost:8001";
+// 👇 THÊM DÒNG NÀY: Import cấu hình từ file config bạn vừa sửa
+import { AUTH_API_URL } from "./config";
+//const AUTH_API_URL = process.env.REACT_APP_AUTH_API_URL || "http://localhost:8001";
 
 const authClient = axios.create({
   baseURL: AUTH_API_URL,
