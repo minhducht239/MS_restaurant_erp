@@ -204,16 +204,12 @@ export const createBillFromTable = async (tableId, billData = {}) => {
     console.log("- URL:", `${API_URL}/${tableId}/create_bill/`);
     console.log("- Data:", requestData);
 
-    const response = await axios.post(
-      `${API_URL}/${tableId}/create_bill/`,
-      requestData,
-      {
-        headers: {
-          ...getAuthHeader(),
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await axios.post(`${API_URL}/${tableId}/create_bill/`, requestData, {
+      headers: {
+        ...getAuthHeader(),
+        "Content-Type": "application/json",
+      },
+    });
 
     console.log("Raw axios response:", response);
     console.log("Response status:", response.status);
