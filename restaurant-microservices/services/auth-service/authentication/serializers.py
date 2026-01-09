@@ -98,7 +98,7 @@ class UserSerializer(serializers.ModelSerializer):
 class UserCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating users (admin only)"""
     
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password = serializers.CharField(write_only=True, required=True)
     password_confirm = serializers.CharField(write_only=True, required=True)
     
     class Meta:
@@ -132,7 +132,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     """User registration serializer"""
     
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password = serializers.CharField(write_only=True, required=True)
     password_confirm = serializers.CharField(write_only=True, required=True)
     
     class Meta:
@@ -172,7 +172,7 @@ class ChangePasswordSerializer(serializers.Serializer):
     """Change password serializer"""
     
     old_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True, validators=[validate_password])
+    new_password = serializers.CharField(required=True)
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
@@ -216,4 +216,4 @@ class LoginHistorySerializer(serializers.ModelSerializer):
 class AdminResetPasswordSerializer(serializers.Serializer):
     """Admin reset password serializer"""
     
-    new_password = serializers.CharField(required=True, validators=[validate_password])
+    new_password = serializers.CharField(required=True)
