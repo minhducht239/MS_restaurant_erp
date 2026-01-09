@@ -96,8 +96,47 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+
+# S3 / DigitalOcean Spaces Configuration
+USE_SPACES = os.environ.get('USE_SPACES', 'False').lower() == 'true'
+
+if USE_SPACES:
+    # Cấu hình cho DigitalOcean Spaces
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')  # Ví dụ: https://sgp1.digitaloceanspaces.com
+    
+    # Cấu hình public read (để người dùng xem được ảnh)
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CacheControl': 'max-age=86400',
+    }
+    AWS_LOCATION = 'media'
+    AWS_DEFAULT_ACL = 'public-read'
+    
+    # Sử dụng S3Boto3Storage
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            "OPTIONS": {
+                "endpoint_url": AWS_S3_ENDPOINT_URL,
+                "location": "media",
+                "default_acl": "public-read",
+                "querystring_auth": False  # Quan trọng: tắt chữ ký URL để link tồn tại lâu dài
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+    
+    # Media URL sẽ là đường dẫn trực tiếp tới Spaces
+    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/media/'
+
+else:
+    # Cấu hình chạy Local (giữ nguyên như cũ)
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
