@@ -8,7 +8,16 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-staff-service-key')
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS = ['*']
 
-INSTALLED_APPS = ['django.contrib.auth', 'django.contrib.contenttypes', 'django.contrib.staticfiles', 'rest_framework', 'corsheaders', 'django_filters', 'staff']
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.staticfiles',
+    'rest_framework',
+    'corsheaders',
+    'django_filters',
+    'staff',
+]
 MIDDLEWARE = ['django.middleware.security.SecurityMiddleware', 'corsheaders.middleware.CorsMiddleware', 'django.middleware.common.CommonMiddleware']
 
 ROOT_URLCONF = 'staff_service.urls'
