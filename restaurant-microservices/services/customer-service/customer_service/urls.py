@@ -19,6 +19,6 @@ urlpatterns = [
     path('', include('customers.urls')),
     
     # With /api/customer/ prefix for production gateway routing
-    path('api/customer/', include('customers.urls')),
-    path('api/customer/health/', health_check, name='health_check_api'),
+    path('api/customers/', include('customers.urls')),
+    path('api/customers/health/', health_check, name='health_check_api'),
 ]

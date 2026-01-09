@@ -6,7 +6,7 @@ export const API_BASE_URL = {
   auth: process.env.REACT_APP_AUTH_API_URL || GATEWAY_URL,
   menu: process.env.REACT_APP_MENU_API_URL || `${GATEWAY_URL}/api/menu`,
   billing: process.env.REACT_APP_BILLING_API_URL || `${GATEWAY_URL}/api/billing`,
-  customer: process.env.REACT_APP_CUSTOMER_API_URL || `${GATEWAY_URL}/api/customer`,
+  customer: process.env.REACT_APP_CUSTOMER_API_URL || `${GATEWAY_URL}/api/customers`,
   tables: process.env.REACT_APP_TABLES_API_URL || `${GATEWAY_URL}/api/table`,
   staff: process.env.REACT_APP_STAFF_API_URL || `${GATEWAY_URL}/api/staff`,
   reservation: process.env.REACT_APP_RESERVATION_API_URL || `${GATEWAY_URL}/api/reservation`,
