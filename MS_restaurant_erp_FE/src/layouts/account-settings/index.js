@@ -75,21 +75,8 @@ function AccountSettings() {
           userData.username ||
           "";
 
-        setProfileData({
-          name: fullName,
-          email: userData.email || "",
-          phone: userData.phone_number || "",
-          role: userData.role || "staff",
-          avatar: userData.avatar || userData.avatar_url || "",
-        });
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        setError(`Không thể tải thông tin người dùng: ${error.message}`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-        const avatarUrl = userData.avatar_url_absolute || userData.avatar_url || userData.avatar || "";
+        const avatarUrl =
+          userData.avatar_url_absolute || userData.avatar_url || userData.avatar || "";
 
         setProfileData({
           name: fullName,
@@ -98,6 +85,14 @@ function AccountSettings() {
           role: userData.role || "staff",
           avatar: avatarUrl,
         });
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setError(`Không thể tải thông tin người dùng: ${error.message}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     if (!profileData.email && user?.email) {
       fetchUserData();
     }
@@ -178,11 +173,6 @@ function AccountSettings() {
       console.log("Avatar upload response:", response);
 
       const newAvatarUrl =
-        response.user?.avatar_url ||
-        response.user?.avatar ||
-        response.avatar_url ||
-        response.avatar;
-      const newAvatarUrl =
         response.user?.avatar_url_absolute ||
         response.user?.avatar_url ||
         response.user?.avatar ||
@@ -198,6 +188,7 @@ function AccountSettings() {
         ...user,
         avatar: newAvatarUrl,
         avatar_url: newAvatarUrl,
+        avatar_url_absolute: newAvatarUrl,
       });
 
       setSuccess("Cập nhật ảnh đại diện thành công!");

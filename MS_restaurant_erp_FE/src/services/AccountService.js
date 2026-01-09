@@ -210,13 +210,16 @@ export const deleteAvatar = async () => {
 export const getAvatarUrl = (avatarPath) => {
   if (!avatarPath) return null;
 
-  // If already full URL, return as is
-  if (typeof avatarPath === 'string' && avatarPath.startsWith("http")) {
+  // If already full URL, normalize to https for the gateway domain to avoid mixed-content
+  if (typeof avatarPath === "string" && avatarPath.startsWith("http")) {
+    if (avatarPath.startsWith("http://lionfish-app-jfnln.ondigitalocean.app")) {
+      return avatarPath.replace("http://", "https://");
+    }
     return avatarPath;
   }
 
   // If relative path, prepend AUTH API base URL
-  if (typeof avatarPath === 'string') {
+  if (typeof avatarPath === "string") {
     return `${AUTH_API_URL}${avatarPath}`;
   }
 
