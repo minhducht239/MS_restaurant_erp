@@ -573,12 +573,21 @@ class UserViewSet(viewsets.ModelViewSet):
         
         serializer = AdminResetPasswordSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response({
-                'success': False,
-                'errors': serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
+            # If no password provided, generate a random one
+            if 'new_password' not in request.data:
+                import secrets
+                import string
+                alphabet = string.ascii_letters + string.digits
+                new_password = ''.join(secrets.choice(alphabet) for i in range(12))
+            else:
+                return Response({
+                    'success': False,
+                    'errors': serializer.errors
+                }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            new_password = serializer.validated_data['new_password']
         
-        user.set_password(serializer.validated_data['new_password'])
+        user.set_password(new_password)
         user.failed_login_attempts = 0
         user.locked_until = None
         user.save()
@@ -591,7 +600,8 @@ class UserViewSet(viewsets.ModelViewSet):
         
         return Response({
             'success': True,
-            'message': 'Password reset successfully'
+            'message': 'Password reset successfully',
+            'new_password': new_password
         })
     
     @action(detail=True, methods=['post'])

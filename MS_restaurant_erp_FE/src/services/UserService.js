@@ -79,7 +79,12 @@ export const getUser = async (userId) => {
 
 export const createUser = async (userData) => {
   try {
-    const response = await authClient.post("/api/auth/users/", userData);
+    const payload = { ...userData };
+    // Backend requires password_confirm matching password
+    if (payload.password) {
+      payload.password_confirm = payload.password;
+    }
+    const response = await authClient.post("/api/auth/users/", payload);
     return response.data;
   } catch (error) {
     throw error;

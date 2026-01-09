@@ -121,7 +121,7 @@ function Personnel() {
       setIsLoading(true);
       setError(null);
 
-      const data = await getStaff({ page: page, limit: 10 });
+      const data = await getStaff({ page: page });
 
       if (!data || !data.results) {
         throw new Error("Dữ liệu API không hợp lệ");
@@ -159,7 +159,7 @@ function Personnel() {
       }));
 
       setStaffList(transformedData);
-      setTotalPages(Math.ceil(data.count / 10));
+      setTotalPages(Math.ceil(data.count / 20)); // PAGE_SIZE from backend is 20
       setCurrentPage(page);
     } catch (error) {
       console.error("Error fetching staff:", error);
