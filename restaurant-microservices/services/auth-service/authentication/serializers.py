@@ -77,18 +77,22 @@ class UserSerializer(serializers.ModelSerializer):
     get_avatar_url = serializers.ReadOnlyField()
     custom_role_detail = RoleSerializer(source='custom_role', read_only=True)
     permissions = serializers.SerializerMethodField()
+    is_locked = serializers.SerializerMethodField()
     
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'full_name',
                   'role', 'custom_role', 'custom_role_detail', 'phone_number', 
                   'avatar', 'avatar_url', 'get_avatar_url', 'date_of_birth', 'address', 
-                  'is_active', 'is_staff', 'is_superuser', 'permissions',
+                  'is_active', 'is_staff', 'is_superuser', 'is_locked', 'permissions',
                   'google_id', 'auth_provider',
                   'last_login', 'last_login_ip', 'failed_login_attempts',
                   'created_at', 'updated_at']
-        read_only_fields = ['id', 'last_login', 'last_login_ip', 'failed_login_attempts', 
+        read_only_fields = ['id', 'is_locked', 'last_login', 'last_login_ip', 'failed_login_attempts', 
                            'google_id', 'auth_provider', 'created_at', 'updated_at']
+    
+    def get_is_locked(self, obj):
+        return obj.is_locked
     
     def get_permissions(self, obj):
         permissions = obj.get_all_permissions()

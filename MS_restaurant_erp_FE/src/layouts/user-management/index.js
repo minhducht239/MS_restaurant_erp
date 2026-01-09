@@ -143,11 +143,19 @@ function UserManagement() {
         await UserService.createUser(submitData);
         showSnackbar("Tạo tài khoản thành công!");
       } else {
-        if (!submitData.password) {
-          delete submitData.password;
-        }
+        // Save password for later use, then remove from update data
+        const newPassword = submitData.password;
+        delete submitData.password; // Backend doesn't support password in PATCH
+
         await UserService.updateUser(selectedUser.id, submitData);
-        showSnackbar("Cập nhật tài khoản thành công!");
+
+        // If password was provided, reset it separately
+        if (newPassword && newPassword.trim() !== "") {
+          await UserService.resetUserPassword(selectedUser.id, newPassword);
+          showSnackbar("Cập nhật tài khoản và đổi mật khẩu thành công!");
+        } else {
+          showSnackbar("Cập nhật tài khoản thành công!");
+        }
       }
       handleCloseDialog();
       loadData();

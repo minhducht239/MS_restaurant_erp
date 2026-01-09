@@ -93,7 +93,14 @@ export const createUser = async (userData) => {
 
 export const updateUser = async (userId, userData) => {
   try {
-    const response = await authClient.patch(`/api/auth/users/${userId}/`, userData);
+    const payload = { ...userData };
+    // Remove password field if empty (backend doesn't support password update via PATCH)
+    if (!payload.password || payload.password === "") {
+      delete payload.password;
+    }
+    // Remove password_confirm as it's not needed for update
+    delete payload.password_confirm;
+    const response = await authClient.patch(`/api/auth/users/${userId}/`, payload);
     return response.data;
   } catch (error) {
     throw error;
