@@ -1,7 +1,8 @@
+from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
 
-def health_check(request): 
+def health_check(request):
     return JsonResponse({'status': 'healthy', 'service': 'staff-service'})
 
 def api_root(request):
@@ -14,11 +15,14 @@ def api_root(request):
     })
 
 urlpatterns = [
+    path('admin/', admin.site.urls),
     path('', api_root, name='api_root'),
     path('health/', health_check, name='health_check'),
+    
+    # Local development
     path('', include('staff.urls')),
     
-    # With /api/staff/ prefix for production gateway routing
+    # Production Gateway routing (Prefix: /api/staff/)
     path('api/staff/', include('staff.urls')),
     path('api/staff/health/', health_check, name='health_check_api'),
 ]
