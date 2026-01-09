@@ -78,12 +78,13 @@ class UserSerializer(serializers.ModelSerializer):
     custom_role_detail = RoleSerializer(source='custom_role', read_only=True)
     permissions = serializers.SerializerMethodField()
     is_locked = serializers.SerializerMethodField()
+    avatar_url_absolute = serializers.SerializerMethodField()
     
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'full_name',
                   'role', 'custom_role', 'custom_role_detail', 'phone_number', 
-                  'avatar', 'avatar_url', 'get_avatar_url', 'date_of_birth', 'address', 
+                  'avatar', 'avatar_url', 'get_avatar_url', 'avatar_url_absolute', 'date_of_birth', 'address', 
                   'is_active', 'is_staff', 'is_superuser', 'is_locked', 'permissions',
                   'google_id', 'auth_provider',
                   'last_login', 'last_login_ip', 'failed_login_attempts',
@@ -98,6 +99,17 @@ class UserSerializer(serializers.ModelSerializer):
         permissions = obj.get_all_permissions()
         return [p.code for p in permissions]
 
+    def get_avatar_url_absolute(self, obj):
+        """Build absolute URL for avatar"""
+        avatar_url = obj.get_avatar_url
+        if not avatar_url or avatar_url.startswith('http'):
+            return avatar_url
+        
+        # Build absolute URL
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(avatar_url)
+        return avatar_url
 
 class UserCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating users (admin only)"""

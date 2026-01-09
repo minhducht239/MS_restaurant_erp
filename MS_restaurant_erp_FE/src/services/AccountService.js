@@ -211,12 +211,16 @@ export const getAvatarUrl = (avatarPath) => {
   if (!avatarPath) return null;
 
   // If already full URL, return as is
-  if (avatarPath.startsWith("http")) {
+  if (typeof avatarPath === 'string' && avatarPath.startsWith("http")) {
     return avatarPath;
   }
 
   // If relative path, prepend AUTH API base URL
-  return `${AUTH_API_URL}${avatarPath}`;
+  if (typeof avatarPath === 'string') {
+    return `${AUTH_API_URL}${avatarPath}`;
+  }
+
+  return null;
 };
 
 // ============= AUTH SERVICE APIs =============

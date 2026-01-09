@@ -54,15 +54,11 @@ function MenuList({ menuItems = [], onEdit, onDelete, onDetail, onQuickToggleAva
   };
 
   const getImageSrc = (item) => {
-    if (item.image) {
-      // Handle both full URLs and relative paths
-      if (item.image.startsWith("http")) {
-        return item.image;
-      } else {
-        return `http://localhost:8000${item.image}`;
-      }
+    // Use image_url from serializer (already has absolute URL)
+    if (item.image_url) {
+      return item.image_url;
     }
-    // Default placeholder based on category
+    // Fallback to default placeholder based on category
     return item.category === "drink" ? "/images/default-drink.jpg" : "/images/default-food.jpg";
   };
 

@@ -89,7 +89,15 @@ function AccountSettings() {
         setIsLoading(false);
       }
     };
+        const avatarUrl = userData.avatar_url_absolute || userData.avatar_url || userData.avatar || "";
 
+        setProfileData({
+          name: fullName,
+          email: userData.email || "",
+          phone: userData.phone_number || "",
+          role: userData.role || "staff",
+          avatar: avatarUrl,
+        });
     if (!profileData.email && user?.email) {
       fetchUserData();
     }
@@ -170,6 +178,12 @@ function AccountSettings() {
       console.log("Avatar upload response:", response);
 
       const newAvatarUrl =
+        response.user?.avatar_url ||
+        response.user?.avatar ||
+        response.avatar_url ||
+        response.avatar;
+      const newAvatarUrl =
+        response.user?.avatar_url_absolute ||
         response.user?.avatar_url ||
         response.user?.avatar ||
         response.avatar_url ||
