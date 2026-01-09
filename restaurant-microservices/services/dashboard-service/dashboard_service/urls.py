@@ -15,7 +15,13 @@ def api_root(request):
     })
 
 urlpatterns = [
-    path('', api_root, name='api_root'),
+    # With /api/dashboard/ prefix for production gateway routing (MUST come first)
+    path('api/dashboard/health/', health_check, name='health_check_api'),
+    path('api/dashboard/', include('dashboard.urls')),
+    
+    # Health check
     path('health/', health_check, name='health_check'),
+    
+    # Local development without prefix
     path('', include('dashboard.urls')),
 ]

@@ -14,11 +14,13 @@ def api_root(request):
     })
 
 urlpatterns = [
-    path('', api_root, name='api_root'),
-    path('health/', health_check, name='health_check'),
-    path('', include('customers.urls')),
-    
-    # With /api/customer/ prefix for production gateway routing
-    path('api/customers/', include('customers.urls')),
+    # With /api/customers/ prefix for production gateway routing (MUST come first)
     path('api/customers/health/', health_check, name='health_check_api'),
+    path('api/customers/', include('customers.urls')),
+    
+    # Health check and root info
+    path('health/', health_check, name='health_check'),
+    
+    # Local development without prefix
+    path('', include('customers.urls')),
 ]

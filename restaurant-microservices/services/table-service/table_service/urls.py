@@ -15,11 +15,13 @@ def api_root(request):
     })
 
 urlpatterns = [
-    path('', api_root, name='api_root'),
-    path('health/', health_check, name='health_check'),
-    path('', include('tables.urls')),
-    
-    # With /api/table/ prefix for production gateway routing
-    path('api/tables/', include('tables.urls')),
+    # With /api/tables/ prefix for production gateway routing (MUST come first)
     path('api/tables/health/', health_check, name='health_check_api'),
+    path('api/tables/', include('tables.urls')),
+    
+    # Health check and root info
+    path('health/', health_check, name='health_check'),
+    
+    # Local development without prefix
+    path('', include('tables.urls')),
 ]
