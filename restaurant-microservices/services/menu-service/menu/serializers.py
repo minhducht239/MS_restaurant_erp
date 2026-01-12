@@ -17,10 +17,15 @@ class MenuItemSerializer(serializers.ModelSerializer):
     
     def get_image_url(self, obj):
         if obj.image:
+            url = obj.image.url
+            # If URL is already absolute (S3/Spaces), return as-is
+            if url.startswith('http'):
+                return url
+            # Otherwise build absolute URL with request
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.image.url)
-            return obj.image.url
+                return request.build_absolute_uri(url)
+            return url
         return None
 
 
