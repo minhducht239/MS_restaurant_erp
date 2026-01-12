@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script to run migrations for all services
 
-echo "🔄 Running migrations for all services..."
+echo " Running migrations for all services..."
 
 services=("auth-service" "menu-service" "billing-service" "customer-service" "table-service" "staff-service" "reservation-service")
 
@@ -10,10 +10,10 @@ for service in "${services[@]}"; do
     docker-compose exec -T $service python manage.py migrate --noinput
 done
 
-echo "✅ All migrations completed!"
+echo " All migrations completed!"
 
 # Create superuser for auth-service
-echo "🔐 Creating superuser for auth-service..."
+echo " Creating superuser for auth-service..."
 docker-compose exec -T auth-service python manage.py shell -c "
 from django.contrib.auth import get_user_model
 User = get_user_model()

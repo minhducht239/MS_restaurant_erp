@@ -287,11 +287,10 @@ function Payment() {
       // Hiển thị alert với thông tin chi tiết
       alert(`${successMessage}
             Mã hóa đơn: ${response.id || "N/A"}
-            ${
-              response.total_amount
-                ? `Tổng tiền: ${response.total_amount.toLocaleString("vi-VN")} đ`
-                : ""
-            }
+            ${response.total_amount
+          ? `Tổng tiền: ${response.total_amount.toLocaleString("vi-VN")} đ`
+          : ""
+        }
             ${response.items_count ? `Số món: ${response.items_count}` : ""}`);
 
       // Chờ 2 giây rồi chuyển hướng
@@ -333,7 +332,7 @@ function Payment() {
           items: items,
         }));
 
-        console.log("✅ Form data updated with table orders");
+        console.log("Form data updated with table orders");
       } else {
         console.log("ℹ️ No orders found for table");
 
@@ -392,7 +391,7 @@ function Payment() {
 
                 {tableId && formData.items.length > 0 && !tableLoading && (
                   <Alert severity="success" sx={{ mt: 2, mb: 2 }}>
-                    ✅ Đã tải {formData.items.length} món từ {tableName || `Bàn ${tableId}`}
+                    Đã tải {formData.items.length} món từ {tableName || `Bàn ${tableId}`}
                   </Alert>
                 )}
 
@@ -470,7 +469,7 @@ function Payment() {
                     {selectedCustomer && (
                       <Alert severity="success" sx={{ mt: 2 }}>
                         <MDTypography variant="body2">
-                          ✅ Đã chọn: <strong>{selectedCustomer.name}</strong> |{" "}
+                          Đã chọn: <strong>{selectedCustomer.name}</strong> |{" "}
                           {selectedCustomer.phone}
                           <br />
                           🎁 Điểm thưởng: <strong>
@@ -656,7 +655,7 @@ function Payment() {
                         <MDBox mt={2}>
                           <Alert severity="info">
                             <MDTypography variant="body2">
-                              ✅ Sẽ sử dụng <strong>{pointsToUse}</strong> điểm
+                              Sẽ sử dụng <strong>{pointsToUse}</strong> điểm
                               <br />
                               💰 Giảm giá: <strong>
                                 {pointsDiscount.toLocaleString("vi-VN")}
@@ -724,9 +723,8 @@ function Payment() {
         open={success}
         autoHideDuration={2000}
         onClose={() => setSuccess(false)}
-        message={`Hóa đơn${
-          tableId ? ` cho ${tableName || `Bàn ${tableId}`}` : ""
-        } đã được tạo thành công`}
+        message={`Hóa đơn${tableId ? ` cho ${tableName || `Bàn ${tableId}`}` : ""
+          } đã được tạo thành công`}
       />
       <Footer />
     </DashboardLayout>

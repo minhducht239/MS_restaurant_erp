@@ -310,7 +310,7 @@ function Menu() {
       );
 
       const statusText = savedItem.is_available ? "còn món" : "hết món";
-      console.log(`✅ Successfully changed ${item.name} to ${statusText}`);
+      console.log(` Successfully changed ${item.name} to ${statusText}`);
     } catch (error) {
       console.error("Error toggling availability:", error);
 

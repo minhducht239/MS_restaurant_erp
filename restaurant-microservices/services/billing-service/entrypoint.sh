@@ -4,6 +4,6 @@ set -e
 echo "🚀 Running migrations..."
 python manage.py migrate --noinput
 
-echo "✅ Migrations complete!"
+echo " Migrations complete!"
 
 exec "$@"

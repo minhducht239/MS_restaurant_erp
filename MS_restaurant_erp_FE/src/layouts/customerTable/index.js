@@ -519,13 +519,12 @@ function Customer() {
     try {
       setIsLoading(true);
 
-      // ✅ FORCE REFRESH: Bypass cache cho customer detail
-      const data = await getCustomerDetail(id, true); // forceRefresh = true
+
+      const data = await getCustomerDetail(id, true);
       console.log("🔄 Customer detail refreshed:", data);
 
       try {
-        // ✅ FORCE REFRESH: Bypass cache cho loyalty history
-        const loyaltyData = await getCustomerLoyaltyHistory(id, true); // forceRefresh = true
+        const loyaltyData = await getCustomerLoyaltyHistory(id, true);
         console.log("🔄 Loyalty history refreshed:", loyaltyData);
         console.log("📊 Total bills:", loyaltyData.history?.length || 0);
         console.log("📊 Expected total points:", data.loyalty_points);
@@ -538,7 +537,7 @@ function Customer() {
       }
 
       setSelectedCustomer(data);
-      setFormData(data); // ✅ Sử dụng data fresh từ server
+      setFormData(data);
       setDialogMode("view");
       setOpenDialog(true);
     } catch (error) {
@@ -653,8 +652,8 @@ function Customer() {
                   </MDTypography>
                   <MDTypography variant="body2" color="text" mb={3}>
                     {filters.search ||
-                    filters.loyaltyRange !== "all" ||
-                    filters.spentRange !== "all"
+                      filters.loyaltyRange !== "all" ||
+                      filters.spentRange !== "all"
                       ? "Thử điều chỉnh bộ lọc để tìm thấy kết quả phù hợp"
                       : "Chưa có khách hàng nào trong hệ thống"}
                   </MDTypography>
@@ -1001,10 +1000,10 @@ function Customer() {
                                   <MDTypography variant="body2">
                                     {item.date
                                       ? new Date(item.date).toLocaleDateString("vi-VN", {
-                                          day: "2-digit",
-                                          month: "2-digit",
-                                          year: "numeric",
-                                        })
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric",
+                                      })
                                       : "N/A"}
                                   </MDTypography>
                                 </MDBox>

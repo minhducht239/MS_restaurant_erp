@@ -9,10 +9,10 @@ foreach ($service in $services) {
     docker-compose exec -T $service python manage.py migrate --noinput
 }
 
-Write-Host "✅ All migrations completed!" -ForegroundColor Green
+Write-Host " All migrations completed!" -ForegroundColor Green
 
 # Create superuser for auth-service
-Write-Host "🔐 Creating superuser for auth-service..." -ForegroundColor Cyan
+Write-Host " Creating superuser for auth-service..." -ForegroundColor Cyan
 
 $pythonCode = @"
 from django.contrib.auth import get_user_model

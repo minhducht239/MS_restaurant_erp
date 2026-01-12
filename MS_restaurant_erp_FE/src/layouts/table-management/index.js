@@ -73,8 +73,7 @@ function TableManagement() {
           // Chi tiết từng bàn
           tableData.forEach((table, index) => {
             console.log(
-              `Bàn ${index}: id=${table.id}, name=${table.name}, floor=${
-                table.floor
+              `Bàn ${index}: id=${table.id}, name=${table.name}, floor=${table.floor
               } (${typeof table.floor})`
             );
           });
@@ -142,7 +141,7 @@ function TableManagement() {
     }
 
     setSelectedTable(table);
-    console.log("✅ selectedTable set to:", table);
+    console.log(" selectedTable set to:", table);
 
     if (table.status === "occupied") {
       // Bàn có khách → Xem chi tiết
@@ -177,9 +176,8 @@ function TableManagement() {
     try {
       console.log("📤 Preparing to redirect to bill creation page for table:", table.id);
 
-      const createBillUrl = `/create-payment-bill?tableId=${
-        table.id
-      }&tableName=${encodeURIComponent(table.name)}`;
+      const createBillUrl = `/create-payment-bill?tableId=${table.id
+        }&tableName=${encodeURIComponent(table.name)}`;
       console.log("🔄 Redirecting to:", createBillUrl);
 
       setOpenOrderDialog(false);
@@ -206,7 +204,7 @@ function TableManagement() {
       return;
     }
 
-    console.log("✅ Opening add order dialog for table:", selectedTable.id);
+    console.log(" Opening add order dialog for table:", selectedTable.id);
     setOpenAddOrderDialog(true);
   };
 
@@ -231,7 +229,7 @@ function TableManagement() {
       const success = await menuHook.addItemsToTable(validTableId);
 
       if (success) {
-        console.log("✅ Items added successfully");
+        console.log("Items added successfully");
 
         const currentTable = tables.find(
           (t) => t.id === validTableId || t.id === Number(validTableId)
@@ -247,7 +245,7 @@ function TableManagement() {
             const statusUpdateSuccess = await updateTableStatus(validTableId, "occupied");
 
             if (statusUpdateSuccess) {
-              console.log("✅ Table status updated to occupied");
+              console.log("Table status updated to occupied");
             } else {
               console.warn("⚠️ Failed to update table status, but items were added");
             }
@@ -340,7 +338,7 @@ function TableManagement() {
       const success = await updateTableStatus(table.id, newStatus);
 
       if (success) {
-        console.log(`✅ Successfully updated table ${table.id} status`);
+        console.log(`Successfully updated table ${table.id} status`);
       } else {
         console.error(`❌ Failed to update table ${table.id} status`);
         setError("Không thể cập nhật trạng thái bàn");
@@ -533,7 +531,7 @@ function TableManagement() {
                           return match;
                         })
                         .map((table) => {
-                          console.log(`✅ Rendering table: ${table.name}`);
+                          console.log(`Rendering table: ${table.name}`);
                           return (
                             <Grid item xs={12} sm={6} md={4} lg={3} key={table.id}>
                               <TableCard
