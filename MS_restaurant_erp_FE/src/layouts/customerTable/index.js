@@ -519,7 +519,6 @@ function Customer() {
     try {
       setIsLoading(true);
 
-
       const data = await getCustomerDetail(id, true);
       console.log("🔄 Customer detail refreshed:", data);
 
@@ -652,8 +651,8 @@ function Customer() {
                   </MDTypography>
                   <MDTypography variant="body2" color="text" mb={3}>
                     {filters.search ||
-                      filters.loyaltyRange !== "all" ||
-                      filters.spentRange !== "all"
+                    filters.loyaltyRange !== "all" ||
+                    filters.spentRange !== "all"
                       ? "Thử điều chỉnh bộ lọc để tìm thấy kết quả phù hợp"
                       : "Chưa có khách hàng nào trong hệ thống"}
                   </MDTypography>
@@ -1000,10 +999,10 @@ function Customer() {
                                   <MDTypography variant="body2">
                                     {item.date
                                       ? new Date(item.date).toLocaleDateString("vi-VN", {
-                                        day: "2-digit",
-                                        month: "2-digit",
-                                        year: "numeric",
-                                      })
+                                          day: "2-digit",
+                                          month: "2-digit",
+                                          year: "numeric",
+                                        })
                                       : "N/A"}
                                   </MDTypography>
                                 </MDBox>

@@ -73,7 +73,8 @@ function TableManagement() {
           // Chi tiết từng bàn
           tableData.forEach((table, index) => {
             console.log(
-              `Bàn ${index}: id=${table.id}, name=${table.name}, floor=${table.floor
+              `Bàn ${index}: id=${table.id}, name=${table.name}, floor=${
+                table.floor
               } (${typeof table.floor})`
             );
           });
@@ -176,8 +177,9 @@ function TableManagement() {
     try {
       console.log("📤 Preparing to redirect to bill creation page for table:", table.id);
 
-      const createBillUrl = `/create-payment-bill?tableId=${table.id
-        }&tableName=${encodeURIComponent(table.name)}`;
+      const createBillUrl = `/create-payment-bill?tableId=${
+        table.id
+      }&tableName=${encodeURIComponent(table.name)}`;
       console.log("🔄 Redirecting to:", createBillUrl);
 
       setOpenOrderDialog(false);

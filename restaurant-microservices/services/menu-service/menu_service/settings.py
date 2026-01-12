@@ -100,12 +100,20 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # S3 / DigitalOcean Spaces Configuration
 USE_SPACES = os.environ.get('USE_SPACES', 'False').lower() == 'true'
 
+# Debug logging for Spaces configuration
+print(f"[MENU-SERVICE] USE_SPACES = {USE_SPACES}")
+print(f"[MENU-SERVICE] USE_SPACES env = '{os.environ.get('USE_SPACES', 'NOT SET')}'")
+if USE_SPACES:
+    print(f"[MENU-SERVICE] AWS_STORAGE_BUCKET_NAME = {os.environ.get('AWS_STORAGE_BUCKET_NAME', 'NOT SET')}")
+    print(f"[MENU-SERVICE] AWS_S3_ENDPOINT_URL = {os.environ.get('AWS_S3_ENDPOINT_URL', 'NOT SET')}")
+    print(f"[MENU-SERVICE] AWS_ACCESS_KEY_ID = {'SET' if os.environ.get('AWS_ACCESS_KEY_ID') else 'NOT SET'}")
+
 if USE_SPACES:
     # Cấu hình cho DigitalOcean Spaces
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-    AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')  # Ví dụ: https://sgp1.digitaloceanspaces.com
+    AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
     
     # Cấu hình public read (để người dùng xem được ảnh)
     AWS_S3_OBJECT_PARAMETERS = {

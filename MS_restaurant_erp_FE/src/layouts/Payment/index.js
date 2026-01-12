@@ -287,10 +287,11 @@ function Payment() {
       // Hiển thị alert với thông tin chi tiết
       alert(`${successMessage}
             Mã hóa đơn: ${response.id || "N/A"}
-            ${response.total_amount
-          ? `Tổng tiền: ${response.total_amount.toLocaleString("vi-VN")} đ`
-          : ""
-        }
+            ${
+              response.total_amount
+                ? `Tổng tiền: ${response.total_amount.toLocaleString("vi-VN")} đ`
+                : ""
+            }
             ${response.items_count ? `Số món: ${response.items_count}` : ""}`);
 
       // Chờ 2 giây rồi chuyển hướng
@@ -723,8 +724,9 @@ function Payment() {
         open={success}
         autoHideDuration={2000}
         onClose={() => setSuccess(false)}
-        message={`Hóa đơn${tableId ? ` cho ${tableName || `Bàn ${tableId}`}` : ""
-          } đã được tạo thành công`}
+        message={`Hóa đơn${
+          tableId ? ` cho ${tableName || `Bàn ${tableId}`}` : ""
+        } đã được tạo thành công`}
       />
       <Footer />
     </DashboardLayout>
