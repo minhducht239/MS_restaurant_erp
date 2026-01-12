@@ -25,6 +25,7 @@ const routes = [
     route: "/dashboard",
     component: <Dashboard />,
     protected: true,
+    // Dashboard luôn hiển thị cho tất cả user đã đăng nhập
   },
   {
     type: "collapse",
@@ -34,6 +35,7 @@ const routes = [
     route: "/menu",
     component: <Menu />,
     protected: true,
+    requiredPermission: "menu.access",
   },
   {
     type: "route",
@@ -41,6 +43,7 @@ const routes = [
     route: "/menu/:id",
     component: <MenuItemDetail />,
     protected: true,
+    requiredPermission: "menu.access",
   },
   {
     type: "collapse",
@@ -50,6 +53,7 @@ const routes = [
     route: "/personnel",
     component: <Personnel />,
     protected: true,
+    requiredPermission: "staff.access",
   },
   {
     type: "collapse",
@@ -59,6 +63,7 @@ const routes = [
     route: "/customer",
     component: <Customer />,
     protected: true,
+    requiredPermission: "customer.access",
   },
   {
     type: "collapse",
@@ -68,6 +73,7 @@ const routes = [
     route: "/table-management",
     component: <TableManagement />,
     protected: true,
+    requiredPermission: "table.access",
   },
   {
     type: "collapse",
@@ -77,6 +83,7 @@ const routes = [
     route: "/billing",
     component: <Billing />,
     protected: true,
+    requiredPermission: "billing.access",
   },
   {
     type: "route",
@@ -85,6 +92,7 @@ const routes = [
     route: "/create-payment-bill",
     component: <Payment />,
     protected: true,
+    requiredPermission: "billing.access",
   },
   {
     type: "collapse",
@@ -94,6 +102,7 @@ const routes = [
     route: "/account-settings",
     component: <AccountSettings />,
     protected: true,
+    // Account settings luôn hiển thị cho tất cả user đã đăng nhập
   },
   {
     type: "divider",

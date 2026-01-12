@@ -13,19 +13,18 @@ class Command(BaseCommand):
         # Simplified permissions - only keep what's actually used
         # Since the system uses IsAuthenticated and IsAdminUser checks,
         # we define module-level access permissions instead of granular CRUD
+        # Note: order is integrated into table management, report is in dashboard
         permissions_data = [
             # Admin Access
             ('admin.full_access', 'Quyền quản trị toàn hệ thống', 'user'),
             
             # Module Access Permissions
             ('menu.access', 'Truy cập quản lý thực đơn', 'menu'),
-            ('table.access', 'Truy cập quản lý bàn', 'table'),
-            ('order.access', 'Truy cập quản lý đơn hàng', 'order'),
+            ('table.access', 'Truy cập quản lý bàn & gọi món', 'table'),
             ('billing.access', 'Truy cập thanh toán và hóa đơn', 'billing'),
             ('customer.access', 'Truy cập quản lý khách hàng', 'customer'),
             ('staff.access', 'Truy cập quản lý nhân viên', 'staff'),
             ('reservation.access', 'Truy cập quản lý đặt bàn', 'reservation'),
-            ('report.access', 'Truy cập báo cáo và thống kê', 'report'),
             ('settings.access', 'Truy cập cài đặt hệ thống', 'settings'),
         ]
 
@@ -59,9 +58,8 @@ class Command(BaseCommand):
                 'description': 'Quản lý nhà hàng, nhân viên, báo cáo',
                 'is_system': True,
                 'permissions': [
-                    'menu.access', 'order.access', 'billing.access',
-                    'table.access', 'reservation.access', 'staff.access',
-                    'customer.access', 'report.access',
+                    'menu.access', 'billing.access', 'table.access',
+                    'reservation.access', 'staff.access', 'customer.access',
                 ],
             },
             {
@@ -70,7 +68,7 @@ class Command(BaseCommand):
                 'description': 'Nhân viên phục vụ',
                 'is_system': True,
                 'permissions': [
-                    'menu.access', 'order.access', 'table.access',
+                    'menu.access', 'table.access',
                     'reservation.access', 'customer.access',
                 ],
             },
@@ -80,7 +78,7 @@ class Command(BaseCommand):
                 'description': 'Nhân viên thu ngân',
                 'is_system': True,
                 'permissions': [
-                    'menu.access', 'order.access', 'billing.access',
+                    'menu.access', 'billing.access',
                     'table.access', 'customer.access',
                 ],
             },
@@ -90,7 +88,7 @@ class Command(BaseCommand):
                 'description': 'Đầu bếp nhà hàng',
                 'is_system': True,
                 'permissions': [
-                    'menu.access', 'order.access',
+                    'menu.access', 'table.access',
                 ],
             },
         ]

@@ -80,6 +80,47 @@ AdminRoute.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
+// Permission Route Component - kiểm tra permission cụ thể
+const PermissionRoute = ({ children, requiredPermission }) => {
+  const { isAuthenticated, loading, user } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return (
+      <MDBox display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <div>Loading...</div>
+      </MDBox>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/authentication/sign-in" state={{ from: location }} />;
+  }
+
+  // Admin có tất cả quyền
+  const isAdmin = user?.role === "admin" || user?.is_superuser || user?.is_staff;
+  if (isAdmin) {
+    return children;
+  }
+
+  // Kiểm tra permission
+  const userPermissions = user?.permissions || [];
+  if (requiredPermission && !userPermissions.includes(requiredPermission)) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return children;
+};
+
+PermissionRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+  requiredPermission: PropTypes.string,
+};
+
+PermissionRoute.defaultProps = {
+  requiredPermission: null,
+};
+
 // Nội dung chính của ứng dụng - sử dụng useAuth bên trong AuthProvider
 function AppContent() {
   const [controller, dispatch] = useMaterialUIController();
@@ -99,6 +140,16 @@ function AppContent() {
   // Kiểm tra user có phải admin không
   const isAdmin = user?.role === "admin" || user?.is_superuser || user?.is_staff;
 
+  // Kiểm tra user có permission cụ thể không
+  const hasPermission = (permissionCode) => {
+    if (!permissionCode) return true; // Không yêu cầu permission
+    if (isAdmin) return true; // Admin có tất cả quyền
+
+    // Check trong mảng permissions của user
+    const userPermissions = user?.permissions || [];
+    return userPermissions.includes(permissionCode);
+  };
+
   // Lọc và điều chỉnh routes dựa trên trạng thái đăng nhập và quyền
   const displayRoutes = [...routes].filter((route) => {
     // Ẩn các route đăng nhập/đăng ký nếu đã xác thực
@@ -109,6 +160,9 @@ function AppContent() {
 
     // Ẩn divider và title của admin nếu không phải admin
     if ((route.key === "divider-admin" || route.key === "admin-title") && !isAdmin) return false;
+
+    // Kiểm tra permission cho route
+    if (route.requiredPermission && !hasPermission(route.requiredPermission)) return false;
 
     return true;
   });
@@ -167,6 +221,21 @@ function AppContent() {
               exact
               path={route.route}
               element={<AdminRoute>{route.component}</AdminRoute>}
+              key={route.key}
+            />
+          );
+        }
+        // Route yêu cầu permission cụ thể
+        if (route.requiredPermission) {
+          return (
+            <Route
+              exact
+              path={route.route}
+              element={
+                <PermissionRoute requiredPermission={route.requiredPermission}>
+                  {route.component}
+                </PermissionRoute>
+              }
               key={route.key}
             />
           );
