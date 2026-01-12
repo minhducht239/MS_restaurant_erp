@@ -9,7 +9,39 @@ from authentication.models import Permission, Role
 class Command(BaseCommand):
     help = 'Create default permissions and roles'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--clean',
+            action='store_true',
+            help='Delete all existing permissions and roles before creating new ones',
+        )
+
     def handle(self, *args, **options):
+        # Valid permission codes - only these should exist
+        valid_permission_codes = [
+            'admin.full_access',
+            'menu.access',
+            'table.access',
+            'billing.access',
+            'customer.access',
+            'staff.access',
+            'reservation.access',
+            'settings.access',
+        ]
+
+        # Clean old permissions if --clean flag is provided
+        if options['clean']:
+            self.stdout.write('\nCleaning old permissions...')
+            # Delete permissions that are not in valid list
+            deleted_count, _ = Permission.objects.exclude(code__in=valid_permission_codes).delete()
+            self.stdout.write(self.style.WARNING(f'  Deleted {deleted_count} old permissions'))
+        else:
+            # Always clean up old permissions that shouldn't exist
+            old_permissions = Permission.objects.exclude(code__in=valid_permission_codes)
+            if old_permissions.exists():
+                old_count = old_permissions.count()
+                old_permissions.delete()
+                self.stdout.write(self.style.WARNING(f'\nAuto-cleaned {old_count} outdated permissions'))
         # Simplified permissions - only keep what's actually used
         # Since the system uses IsAuthenticated and IsAdminUser checks,
         # we define module-level access permissions instead of granular CRUD
