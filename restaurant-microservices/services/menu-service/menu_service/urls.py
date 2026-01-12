@@ -1,3 +1,4 @@
+import os
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
@@ -26,11 +27,13 @@ urlpatterns = [
     path('', include('menu.urls')),
 ]
 
-# Always serve media files (for development and production)
-# In production, consider using nginx or cloud storage for better performance
-urlpatterns += [
-    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
-]
+# Chỉ serve local media files khi KHÔNG sử dụng DigitalOcean Spaces
+# Khi sử dụng Spaces, ảnh được serve trực tiếp từ CDN của Spaces
+USE_SPACES = getattr(settings, 'USE_SPACES', os.environ.get('USE_SPACES', 'False').lower() == 'true')
+if not USE_SPACES:
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    ]
 
 # Also add static serving for DEBUG mode
 if settings.DEBUG:

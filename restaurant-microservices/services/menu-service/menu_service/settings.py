@@ -138,6 +138,11 @@ else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
 
+# Đảm bảo MEDIA_ROOT luôn tồn tại cho các thao tác Django internal
+# (cần thiết ngay cả khi sử dụng Spaces vì một số code Django vẫn reference đến nó)
+if USE_SPACES:
+    MEDIA_ROOT = BASE_DIR / 'media'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Logging configuration

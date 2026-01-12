@@ -42,6 +42,19 @@ services:
         value: "*.ondigitalocean.app"
       - key: REDIS_URL
         value: "redis://localhost:6379/0"
+      # DigitalOcean Spaces Configuration for persistent image storage
+      - key: USE_SPACES
+        value: "true"
+      - key: AWS_ACCESS_KEY_ID
+        type: SECRET
+        value: "YOUR_SPACES_ACCESS_KEY"
+      - key: AWS_SECRET_ACCESS_KEY
+        type: SECRET
+        value: "YOUR_SPACES_SECRET_KEY"
+      - key: AWS_STORAGE_BUCKET_NAME
+        value: "restaurant-pic"
+      - key: AWS_S3_ENDPOINT_URL
+        value: "https://sgp1.digitaloceanspaces.com"
 
   # Menu Service
   - name: menu-service
@@ -77,6 +90,19 @@ services:
         value: "true"
       - key: ALLOWED_HOSTS
         value: "*.ondigitalocean.app"
+      # DigitalOcean Spaces Configuration for persistent image storage
+      - key: USE_SPACES
+        value: "true"
+      - key: AWS_ACCESS_KEY_ID
+        type: SECRET
+        value: "YOUR_SPACES_ACCESS_KEY"
+      - key: AWS_SECRET_ACCESS_KEY
+        type: SECRET
+        value: "YOUR_SPACES_SECRET_KEY"
+      - key: AWS_STORAGE_BUCKET_NAME
+        value: "restaurant-pic"
+      - key: AWS_S3_ENDPOINT_URL
+        value: "https://sgp1.digitaloceanspaces.com"
 
   # Billing Service
   - name: billing-service

@@ -248,6 +248,10 @@ else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
 
+# Đảm bảo MEDIA_ROOT luôn tồn tại cho các thao tác Django internal
+if USE_SPACES:
+    MEDIA_ROOT = BASE_DIR / 'media'
+
 # Default primary key
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
