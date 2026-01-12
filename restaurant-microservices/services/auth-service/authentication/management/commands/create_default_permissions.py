@@ -10,65 +10,23 @@ class Command(BaseCommand):
     help = 'Create default permissions and roles'
 
     def handle(self, *args, **options):
-        # Default permissions
+        # Simplified permissions - only keep what's actually used
+        # Since the system uses IsAuthenticated and IsAdminUser checks,
+        # we define module-level access permissions instead of granular CRUD
         permissions_data = [
-            # User Management
-            ('user.view', 'Xem người dùng', 'user'),
-            ('user.create', 'Tạo người dùng', 'user'),
-            ('user.edit', 'Sửa người dùng', 'user'),
-            ('user.delete', 'Xóa người dùng', 'user'),
-            ('user.change_role', 'Thay đổi vai trò', 'user'),
-            ('user.reset_password', 'Đặt lại mật khẩu', 'user'),
+            # Admin Access
+            ('admin.full_access', 'Quyền quản trị toàn hệ thống', 'user'),
             
-            # Menu Management
-            ('menu.view', 'Xem thực đơn', 'menu'),
-            ('menu.create', 'Tạo món ăn', 'menu'),
-            ('menu.edit', 'Sửa món ăn', 'menu'),
-            ('menu.delete', 'Xóa món ăn', 'menu'),
-            
-            # Order Management
-            ('order.view', 'Xem đơn hàng', 'order'),
-            ('order.create', 'Tạo đơn hàng', 'order'),
-            ('order.edit', 'Sửa đơn hàng', 'order'),
-            ('order.cancel', 'Hủy đơn hàng', 'order'),
-            
-            # Billing Management
-            ('billing.view', 'Xem hóa đơn', 'billing'),
-            ('billing.create', 'Tạo hóa đơn', 'billing'),
-            ('billing.edit', 'Sửa hóa đơn', 'billing'),
-            ('billing.delete', 'Xóa hóa đơn', 'billing'),
-            
-            # Table Management
-            ('table.view', 'Xem bàn', 'table'),
-            ('table.create', 'Tạo bàn', 'table'),
-            ('table.edit', 'Sửa bàn', 'table'),
-            ('table.delete', 'Xóa bàn', 'table'),
-            
-            # Reservation Management
-            ('reservation.view', 'Xem đặt bàn', 'reservation'),
-            ('reservation.create', 'Tạo đặt bàn', 'reservation'),
-            ('reservation.edit', 'Sửa đặt bàn', 'reservation'),
-            ('reservation.cancel', 'Hủy đặt bàn', 'reservation'),
-            
-            # Staff Management
-            ('staff.view', 'Xem nhân viên', 'staff'),
-            ('staff.create', 'Tạo nhân viên', 'staff'),
-            ('staff.edit', 'Sửa nhân viên', 'staff'),
-            ('staff.delete', 'Xóa nhân viên', 'staff'),
-            
-            # Customer Management
-            ('customer.view', 'Xem khách hàng', 'customer'),
-            ('customer.create', 'Tạo khách hàng', 'customer'),
-            ('customer.edit', 'Sửa khách hàng', 'customer'),
-            ('customer.delete', 'Xóa khách hàng', 'customer'),
-            
-            # Reports & Analytics
-            ('report.view', 'Xem báo cáo', 'report'),
-            ('report.export', 'Xuất báo cáo', 'report'),
-            
-            # System Settings
-            ('settings.view', 'Xem cài đặt', 'settings'),
-            ('settings.edit', 'Sửa cài đặt', 'settings'),
+            # Module Access Permissions
+            ('menu.access', 'Truy cập quản lý thực đơn', 'menu'),
+            ('table.access', 'Truy cập quản lý bàn', 'table'),
+            ('order.access', 'Truy cập quản lý đơn hàng', 'order'),
+            ('billing.access', 'Truy cập thanh toán và hóa đơn', 'billing'),
+            ('customer.access', 'Truy cập quản lý khách hàng', 'customer'),
+            ('staff.access', 'Truy cập quản lý nhân viên', 'staff'),
+            ('reservation.access', 'Truy cập quản lý đặt bàn', 'reservation'),
+            ('report.access', 'Truy cập báo cáo và thống kê', 'report'),
+            ('settings.access', 'Truy cập cài đặt hệ thống', 'settings'),
         ]
 
         # Create permissions
@@ -86,7 +44,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f'\nCreated {len(created_permissions)} new permissions'))
 
-        # Create default roles
+        # Create default roles with simplified permissions
         roles_data = [
             {
                 'name': 'admin',
@@ -101,14 +59,9 @@ class Command(BaseCommand):
                 'description': 'Quản lý nhà hàng, nhân viên, báo cáo',
                 'is_system': True,
                 'permissions': [
-                    'user.view', 'menu.view', 'menu.create', 'menu.edit', 'menu.delete',
-                    'order.view', 'order.create', 'order.edit', 'order.cancel',
-                    'billing.view', 'billing.create', 'billing.edit',
-                    'table.view', 'table.create', 'table.edit', 'table.delete',
-                    'reservation.view', 'reservation.create', 'reservation.edit', 'reservation.cancel',
-                    'staff.view', 'staff.create', 'staff.edit',
-                    'customer.view', 'customer.create', 'customer.edit',
-                    'report.view', 'report.export',
+                    'menu.access', 'order.access', 'billing.access',
+                    'table.access', 'reservation.access', 'staff.access',
+                    'customer.access', 'report.access',
                 ],
             },
             {
@@ -117,9 +70,8 @@ class Command(BaseCommand):
                 'description': 'Nhân viên phục vụ',
                 'is_system': True,
                 'permissions': [
-                    'menu.view', 'order.view', 'order.create', 'order.edit',
-                    'table.view', 'reservation.view', 'reservation.create',
-                    'customer.view', 'customer.create',
+                    'menu.access', 'order.access', 'table.access',
+                    'reservation.access', 'customer.access',
                 ],
             },
             {
@@ -128,8 +80,8 @@ class Command(BaseCommand):
                 'description': 'Nhân viên thu ngân',
                 'is_system': True,
                 'permissions': [
-                    'menu.view', 'order.view', 'billing.view', 'billing.create',
-                    'table.view', 'customer.view',
+                    'menu.access', 'order.access', 'billing.access',
+                    'table.access', 'customer.access',
                 ],
             },
             {
@@ -138,8 +90,7 @@ class Command(BaseCommand):
                 'description': 'Đầu bếp nhà hàng',
                 'is_system': True,
                 'permissions': [
-                    'menu.view', 'menu.create', 'menu.edit',
-                    'order.view',
+                    'menu.access', 'order.access',
                 ],
             },
         ]
