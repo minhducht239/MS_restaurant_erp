@@ -118,11 +118,19 @@ function RoleManagement() {
 
   const handleSubmit = async () => {
     try {
+      // Backend expects permission_ids instead of permissions
+      const submitData = {
+        name: formData.name,
+        display_name: formData.name, // Use name as display_name if not provided
+        description: formData.description,
+        permission_ids: formData.permissions, // Backend uses permission_ids
+      };
+
       if (dialogMode === "create") {
-        await UserService.createRole(formData);
+        await UserService.createRole(submitData);
         showSnackbar("Tạo vai trò thành công!");
       } else {
-        await UserService.updateRole(selectedRole.id, formData);
+        await UserService.updateRole(selectedRole.id, submitData);
         showSnackbar("Cập nhật vai trò thành công!");
       }
       handleCloseDialog();

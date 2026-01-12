@@ -45,7 +45,6 @@ function UserManagement() {
     password: "",
     first_name: "",
     last_name: "",
-    role: "staff",
     custom_role: "",
   });
 
@@ -102,7 +101,6 @@ function UserManagement() {
         password: "",
         first_name: user.first_name || "",
         last_name: user.last_name || "",
-        role: user.role || "staff",
         custom_role: user.custom_role ? String(user.custom_role) : "",
       });
     } else {
@@ -112,7 +110,6 @@ function UserManagement() {
         password: "",
         first_name: "",
         last_name: "",
-        role: "staff",
         custom_role: "",
       });
     }
@@ -133,6 +130,7 @@ function UserManagement() {
   const handleSubmit = async () => {
     try {
       const submitData = { ...formData };
+      // Convert custom_role to integer for backend
       if (submitData.custom_role) {
         submitData.custom_role = parseInt(submitData.custom_role, 10);
       } else {
@@ -205,18 +203,6 @@ function UserManagement() {
     handleCloseMenu();
   };
 
-  const getRoleLabel = (role) => {
-    const roleLabels = {
-      admin: "Quản trị viên",
-      manager: "Quản lý",
-      staff: "Nhân viên",
-      chef: "Đầu bếp",
-      waiter: "Phục vụ",
-      cashier: "Thu ngân",
-    };
-    return roleLabels[role] || role;
-  };
-
   const columns = [
     { Header: "Username", accessor: "username", width: "15%" },
     { Header: "Email", accessor: "email", width: "20%" },
@@ -232,8 +218,8 @@ function UserManagement() {
     fullname: `${user.first_name || ""} ${user.last_name || ""}`.trim() || "-",
     role_display: (
       <Chip
-        label={user.custom_role_name || getRoleLabel(user.role)}
-        color={user.role === "admin" ? "error" : user.role === "manager" ? "warning" : "info"}
+        label={user.custom_role_name || "Chưa phân vai trò"}
+        color={user.custom_role_name ? "info" : "default"}
         size="small"
       />
     ),
@@ -365,41 +351,22 @@ function UserManagement() {
               fullWidth
             />
             <FormControl fullWidth>
-              <InputLabel>Vai trò cơ bản</InputLabel>
+              <InputLabel>Vai trò</InputLabel>
               <Select
-                name="role"
-                value={formData.role}
+                name="custom_role"
+                value={formData.custom_role}
                 onChange={handleFormChange}
-                label="Vai trò cơ bản"
+                label="Vai trò"
                 sx={{ height: 45 }}
               >
-                <MenuItem value="admin">Quản trị viên</MenuItem>
-                <MenuItem value="manager">Quản lý</MenuItem>
-                <MenuItem value="staff">Nhân viên</MenuItem>
-                <MenuItem value="chef">Đầu bếp</MenuItem>
-                <MenuItem value="waiter">Phục vụ</MenuItem>
-                <MenuItem value="cashier">Thu ngân</MenuItem>
+                <MenuItem value="">-- Chọn vai trò --</MenuItem>
+                {roles.map((role) => (
+                  <MenuItem key={role.id} value={String(role.id)}>
+                    {role.display_name || role.name}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
-            {roles.length > 0 && (
-              <FormControl fullWidth>
-                <InputLabel>Vai trò tùy chỉnh</InputLabel>
-                <Select
-                  name="custom_role"
-                  value={formData.custom_role}
-                  onChange={handleFormChange}
-                  label="Vai trò tùy chỉnh"
-                  sx={{ height: 45 }}
-                >
-                  <MenuItem value="">Không</MenuItem>
-                  {roles.map((role) => (
-                    <MenuItem key={role.id} value={String(role.id)}>
-                      {role.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
           </MDBox>
         </DialogContent>
         <DialogActions>

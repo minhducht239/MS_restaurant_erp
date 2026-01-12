@@ -76,6 +76,7 @@ class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
     get_avatar_url = serializers.ReadOnlyField()
     custom_role_detail = RoleSerializer(source='custom_role', read_only=True)
+    custom_role_name = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
     is_locked = serializers.SerializerMethodField()
     avatar_url_absolute = serializers.SerializerMethodField()
@@ -83,7 +84,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'full_name',
-                  'role', 'custom_role', 'custom_role_detail', 'phone_number', 
+                  'role', 'custom_role', 'custom_role_detail', 'custom_role_name', 'phone_number', 
                   'avatar', 'avatar_url', 'get_avatar_url', 'avatar_url_absolute', 'date_of_birth', 'address', 
                   'is_active', 'is_staff', 'is_superuser', 'is_locked', 'permissions',
                   'google_id', 'auth_provider',
@@ -91,6 +92,12 @@ class UserSerializer(serializers.ModelSerializer):
                   'created_at', 'updated_at']
         read_only_fields = ['id', 'is_locked', 'last_login', 'last_login_ip', 'failed_login_attempts', 
                            'google_id', 'auth_provider', 'created_at', 'updated_at']
+    
+    def get_custom_role_name(self, obj):
+        """Return the display name of custom role"""
+        if obj.custom_role:
+            return obj.custom_role.display_name or obj.custom_role.name
+        return None
     
     def get_is_locked(self, obj):
         return obj.is_locked
